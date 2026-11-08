@@ -190,6 +190,14 @@ details.cfg summary{cursor:pointer;font-weight:600}
 details.cfg[open] summary{margin-bottom:12px}
 details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:520px){.pay-nums{grid-template-columns:1fr 1fr}.pay-nums>div:first-child{grid-column:1/-1}}
+
+.trow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:baseline}
+.trow .lbl{font-weight:600}
+.trow .calc{color:var(--muted);font-size:.82rem;grid-column:1}
+.trow .got{text-align:right}
+.trow .st{grid-column:2;text-align:right}
+.trip-cfg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start}
+@media (max-width:520px){.trip-cfg{grid-template-columns:1fr 1fr}.trip-cfg .f-rate{grid-column:1/-1}}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.88rem;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -277,6 +285,21 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
   <div class="view" id="vSalary" hidden>
     <section class="pay-card" aria-label="Выплаты за месяц" id="payCard"></section>
 
+    <section class="pay-card" aria-label="Командировочные" id="tripCard">
+      <div class="sec-head"><h2 id="tripTitle">Командировочные</h2><span class="muted" id="tripSum"></span></div>
+      <span class="pill wait" id="tripPill"></span>
+      <div id="tripRows"></div>
+      <details class="cfg" id="tripCfg" style="padding:10px 12px">
+        <summary>Условия командировки</summary>
+        <div class="trip-cfg">
+          <label class="field f-rate"><span class="label">Суточные, ₽ в день</span><input id="tripRate" inputmode="decimal" placeholder="700"></label>
+          <label class="field"><span class="label">Командировка с</span><input id="tripFrom" type="date"></label>
+          <label class="field"><span class="label">по</span><input id="tripTo" type="date"><span class="hint">Пусто — по сей день</span></label>
+        </div>
+        <p class="note" style="margin-top:10px">Выплата 1-го числа — за дни с 1-го по 15-е, выплата 15-го — за дни с 16-го до конца месяца. Если выплата пришла чуть раньше (перед выходными) или позже, она всё равно засчитается за свой период.</p>
+      </details>
+    </section>
+
     <section aria-label="Выплаты от работодателя" style="display:flex;flex-direction:column;gap:8px">
       <div class="sec-head"><h2>Выплаты от работодателя</h2><span class="muted" id="payCount"></span></div>
       <div class="plist" id="payList"></div>
@@ -284,7 +307,7 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
 
     <section aria-label="Другие поступления" style="display:flex;flex-direction:column;gap:8px">
       <div class="sec-head"><h2>Другие поступления</h2><span class="muted">в зарплату не входят</span></div>
-      <p class="note">Переводы, кэшбэк, командировочные. Если здесь оказалась зарплата, поменяйте категорию — она перейдёт в выплаты.</p>
+      <p class="note">Переводы, кэшбэк и прочее. Если здесь оказалась зарплата, поменяйте категорию — она перейдёт в выплаты.</p>
       <div class="plist" id="otherList"></div>
     </section>
 
@@ -642,6 +665,57 @@ $("r12").onclick=()=>{range=12;try{localStorage.setItem("kopilka-range","12")}ca
 document.addEventListener("pointerdown",e=>{if(!e.target.closest("#chart"))$("tip").hidden=true});
 try{new ResizeObserver(()=>renderChart()).observe($("chart"))}catch(e){addEventListener("resize",renderChart)}
 
+/* ---------- trip allowance (командировочные) ---------- */
+var tripBound=false;
+function tripCfg(){return{rate:num(sal.tripRate)||700,from:sal.tripFrom||"",to:sal.tripTo||""}}
+function tripKey(t){ // к какой половине месяца относится выплата
+  const [y,mo,d]=t.date.split("-").map(Number);
+  if(d>=26){const n=new Date(y,mo,1);return n.getFullYear()+"-"+pad(n.getMonth()+1)+"#1"}
+  return t.date.slice(0,7)+(d<=10?"#1":"#2");
+}
+function tripPeriod(y,m,p){
+  const c=tripCfg(),ld=lastDay(y,m),a=p===1?1:16,b=p===1?15:ld,key=y+"-"+pad(m+1);
+  let days=0;
+  if(c.from){for(let d=a;d<=b;d++){const ds=key+"-"+pad(d);if(ds>=c.from&&(!c.to||ds<=c.to))days++}}
+  const due=new Date(y,m,p===1?1:15),exp=days*c.rate;
+  const pays=state.tx.filter(t=>t.type==="inc"&&t.cat==="Командировочные"&&t.date&&tripKey(t)===key+"#"+p);
+  const got=pays.reduce((s,t)=>s+t.amount,0);
+  const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),late=new Date(y,m,due.getDate()+3);
+  let cls,text;
+  if(!exp&&!got){cls="none";text="—"}
+  else if(got>=exp&&exp){cls="ok";text=got>exp?`✓ +${nf(got-exp)} сверх`:"✓ полностью"}
+  else if(!exp&&got){cls="wait";text="вне дат командировки"}
+  else if(today<due){cls="wait";text=`ждём ${due.toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}`}
+  else if(today<=late){cls="wait";text=got?`ждём ещё ${nf(exp-got)}`:`должны прийти ${due.toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}`}
+  else{cls="bad";text=`✕ недоплата ${nf(exp-got)}`}
+  return{p,a,b,days,exp,got,pays,cls,text,due};
+}
+function renderTrip(){
+  if(!tripBound){tripBound=true;
+    if(!sal.tripFrom){const f=state.tx.filter(t=>t.cat==="Командировочные"&&t.date).map(t=>tripKey(t)).sort()[0];
+      if(f){const [ym,p]=f.split("#");sal.tripFrom=ym+(p==="1"?"-01":"-16");saveSal()}}
+    const ids={tripRate:"tripRate",tripFrom:"tripFrom",tripTo:"tripTo"};
+    for(const[id,k]of Object.entries(ids)){$(id).value=sal[k]||"";$(id).addEventListener("input",()=>{sal[k]=$(id).value;saveSal();renderTrip()})}
+    $("tripCfg").open=!sal.tripFrom;
+  }
+  const y=state.month.getFullYear(),m=state.month.getMonth(),c=tripCfg();
+  const mGen=new Date(y,m,2).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}).replace(/^\d+\s*/,"");
+  const mNom=new Date(y,m,1).toLocaleDateString("ru-RU",{month:"long"});
+  const ps=[tripPeriod(y,m,1),tripPeriod(y,m,2)];
+  $("tripTitle").textContent="Командировочные за "+mNom;
+  const exp=ps[0].exp+ps[1].exp,got=ps[0].got+ps[1].got,bad=ps.filter(p=>p.cls==="bad");
+  $("tripSum").textContent=exp||got?`${nf(got)} из ${nf(exp)} ₽`:"";
+  const pill=$("tripPill");
+  if(!c.from){pill.className="pill none";pill.textContent="Укажите даты командировки в условиях ниже"}
+  else if(!exp&&!got){pill.className="pill none";pill.textContent="В этом месяце командировки нет"}
+  else if(bad.length){pill.className="pill bad";pill.textContent="✕ Недоплата "+fmt(bad.reduce((s,p)=>s+p.exp-p.got,0))}
+  else if(ps.every(p=>p.cls==="ok"||p.cls==="none")){pill.className="pill ok";pill.textContent="✓ Выплачено полностью"}
+  else{pill.className="pill wait";pill.textContent=`Ждём ещё ${fmt(Math.max(0,exp-got))}`}
+  $("tripRows").innerHTML=ps.map(p=>`<div class="trow"><span class="lbl">${p.a}–${p.b} ${mGen}</span><span class="num got">${p.got?"+"+fmt(p.got):"0 ₽"}</span>
+    <span class="calc">${p.days?`${p.days} ${plural(p.days,["день","дня","дней"])} × ${nf(c.rate)} ₽ = ${fmt(p.exp)}`:"нет дней командировки"}${p.pays.length?" · пришло "+p.pays.map(t=>t.date.slice(8)+"."+t.date.slice(5,7)).join(", "):""} · выплата ${p.due.toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}</span>
+    <span class="st ${p.cls}">${p.text}</span></div>`).join("");
+}
+
 /* ---------- salary: payments from employer ---------- */
 const EMP_SAL=["Зарплата","Аванс","Премия","Отпускные","Больничный"];
 const BRACKETS=[[2.4e6,.13],[5e6,.15],[2e7,.18],[5e7,.20],[Infinity,.22]];
@@ -650,7 +724,7 @@ function kidsDed(n){let d=0;for(let i=1;i<=n;i++)d+=i===1?1400:i===2?2800:6000;r
 function salaryYear(gross,kids){const ded=kidsDed(kids);let ci=0,cd=0,ct=0;const rows=[];
   for(let m=0;m<12;m++){ci+=gross;if(ded&&ci<=450000)cd+=ded;const t=Math.round(ndfl(Math.max(0,ci-cd))),tax=t-ct;ct=t;rows.push({gross,tax,net:gross-tax})}return rows}
 function nf(n){return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)}
-let sal={mode:"net",amt:"",bonus:"",kids:"0",adv:"40",advDay:"25",payDay:"10",payWhen:"next",view:"ledger"};
+let sal={mode:"net",amt:"",bonus:"",kids:"0",adv:"40",advDay:"25",payDay:"10",payWhen:"next",view:"ledger",tripRate:"700",tripFrom:"",tripTo:""};
 try{const o=JSON.parse(localStorage.getItem("kopilka-salary")||"{}");delete o.year;if(o.mode&&!o.payDay)o.mode="gross";Object.assign(sal,o)}catch(e){}
 const saveSal=()=>{try{localStorage.setItem("kopilka-salary",JSON.stringify(sal))}catch(e){}};
 const num=v=>parseFloat(String(v??"").replace(/[\s ]/g,"").replace(",","."))||0;
@@ -731,7 +805,7 @@ function renderSalary(){
   $("payCount").textContent=st.pays.length?st.pays.length+" "+plural(st.pays.length,["выплата","выплаты","выплат"]):"";
   $("payList").innerHTML=st.pays.length?st.pays.sort((a,b)=>a.date.localeCompare(b.date)).map(t=>payRow(t,t.date.slice(0,7)!==st.key?" · пришла в следующем месяце":"")).join("")
     :`<p class="note">За этот месяц выплат пока нет. Загрузите выписку на вкладке «Учёт» или добавьте доход с категорией «Зарплата» или «Аванс».</p>`;
-  const key=y+"-"+pad(m+1),others=state.tx.filter(t=>t.type==="inc"&&!EMP_SAL.includes(t.cat)&&t.date&&t.date.startsWith(key)).sort((a,b)=>a.date.localeCompare(b.date));
+  const key=y+"-"+pad(m+1),others=state.tx.filter(t=>t.type==="inc"&&!EMP_SAL.includes(t.cat)&&t.cat!=="Командировочные"&&t.date&&t.date.startsWith(key)).sort((a,b)=>a.date.localeCompare(b.date));
   $("otherList").innerHTML=others.length?others.map(t=>payRow(t)).join(""):`<p class="note">Других поступлений в этом месяце нет.</p>`;
   document.querySelectorAll("#payList select,#otherList select").forEach(s=>s.onchange=async()=>{
     try{await store.update(s.dataset.id,{cat:s.value});toast(EMP_SAL.includes(s.value)?"Перенесено в выплаты":"Перенесено в другие поступления")}catch(e){toast("Не удалось изменить категорию")}});
@@ -742,6 +816,7 @@ function renderSalary(){
   $("salYearNote").textContent=debt?`недоплачено за ${y}: ${fmt(debt)}`:"";
   $("salTable").innerHTML=vis.length?`<table><thead><tr><th>Месяц</th><th>Ожидалось</th><th>Получено</th><th>Итог</th></tr></thead><tbody>${vis.reverse().map(r=>`<tr class="${r.i===m?"cur":""}" data-m="${r.i}" style="cursor:pointer"><td>${new Date(y,r.i,1).toLocaleDateString("ru-RU",{month:"long"})}</td><td class="num">${r.exp?nf(r.exp):"—"}</td><td class="num">${nf(r.got)}</td><td><span class="st ${r.cls}">${r.cls==="ok"?"✓ полностью":r.cls==="bad"?"✕ −"+nf(r.exp-r.got):r.exp?"ждём":"—"}</span></td></tr>`).join("")}</tbody></table>`:"";
   document.querySelectorAll("#salTable tr[data-m]").forEach(tr=>tr.onclick=()=>{state.month=new Date(y,+tr.dataset.m,1);render()});
+  renderTrip();
   $("cfgNote").textContent=sal.mode==="gross"&&num(sal.amt)?`Ожидаемая сумма на руки считается из оклада за вычетом НДФЛ по прогрессивной шкале (13% до 2,4 млн ₽ дохода за год, дальше 15–22%). В ${mLong.split(" ")[0].toLowerCase()}: ${fmt(expectedNet(y,m))}.`:"Если на руки каждый месяц приходит одна и та же сумма, проще указать её. Если знаете только оклад, выберите «Знаю оклад» — посчитаю НДФЛ."
 }
 
