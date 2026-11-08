@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Где деньги?</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#111816" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3ebe0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17120e" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,186 +14,197 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Где деньги?">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Golos+Text:wght@400;500;600&display=swap">
 <style>
 html{-webkit-text-size-adjust:100%}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
 [hidden]{display:none!important}
-/* Layout: one column ledger — month header, balance strip, entry form, category bars, then the day-grouped journal */
+/* Layout: phone-first app shell — cat header + month switch, one screen per tab, bottom tab bar, "+" opens a bottom sheet.
+   Palette taken from the cat photo: oat background, cream cards, coffee accent, caramel highlights. */
 :root{
-  --bg:#f3f5f4; --surface:#ffffff; --ink:#18211f; --muted:#5f6d69; --line:#dde3e1;
-  --accent:#1f5f73; --accent-ink:#ffffff;
-  --inc:#1c7a4a; --inc-soft:#e1f2e8; --c-inc:#13703f; --c-exp:#d8735e; --exp:#b5432f; --exp-soft:#f8e5e1;
-  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --bg:#f3ebe0; --surface:#fffaf3; --surface-2:#f0e5d6; --ink:#2a2018; --muted:#7a6958; --line:#e7dacb;
+  --accent:#6e4527; --accent-ink:#fff8ef; --caramel:#c98a4f; --caramel-soft:#f5e3cf;
+  --inc:#2f7a45; --inc-soft:#e3efdf; --exp:#b4452c; --exp-soft:#f8e3da;
+  --c-inc:#13703f; --c-exp:#d8735e;
+  --shadow:0 1px 2px rgb(74 45 20 / .06),0 12px 28px -18px rgb(74 45 20 / .45);
+  --f-display:"Rubik","Golos Text",system-ui,sans-serif;
   --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-num:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --f-num:"Rubik","Golos Text",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#111816; --surface:#19221f; --ink:#e6ecea; --muted:#93a29d; --line:#2a3633;
-  --accent:#6fb8cc; --accent-ink:#0b1513;
-  --inc:#5fcf91; --inc-soft:#16322a; --c-inc:#15744a; --c-exp:#d9745e; --exp:#ef8a74; --exp-soft:#3a1f1a; color-scheme:dark}}
+  --bg:#17120e; --surface:#231c16; --surface-2:#2f261e; --ink:#f3e8da; --muted:#b3a18e; --line:#3a2f25;
+  --accent:#e0a96d; --accent-ink:#1d150f; --caramel:#e0a96d; --caramel-soft:#3b2c1e;
+  --inc:#86c99a; --inc-soft:#1f2e22; --exp:#f0957a; --exp-soft:#3b231a;
+  --c-inc:#15744a; --c-exp:#d9745e;
+  --shadow:0 1px 0 rgb(255 255 255 / .03),0 12px 28px -18px rgb(0 0 0 / .7); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#111816; --surface:#19221f; --ink:#e6ecea; --muted:#93a29d; --line:#2a3633;
-  --accent:#6fb8cc; --accent-ink:#0b1513;
-  --inc:#5fcf91; --inc-soft:#16322a; --c-inc:#15744a; --c-exp:#d9745e; --exp:#ef8a74; --exp-soft:#3a1f1a; color-scheme:dark}
+  --bg:#17120e; --surface:#231c16; --surface-2:#2f261e; --ink:#f3e8da; --muted:#b3a18e; --line:#3a2f25;
+  --accent:#e0a96d; --accent-ink:#1d150f; --caramel:#e0a96d; --caramel-soft:#3b2c1e;
+  --inc:#86c99a; --inc-soft:#1f2e22; --exp:#f0957a; --exp-soft:#3b231a;
+  --c-inc:#15744a; --c-exp:#d9745e;
+  --shadow:0 1px 0 rgb(255 255 255 / .03),0 12px 28px -18px rgb(0 0 0 / .7); color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.wrap{max-width:760px;margin:0 auto;min-width:0;overflow-x:clip;padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
-h1,h2{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance}
-h1{font-size:1.5rem;letter-spacing:-.01em}
-h2{font-size:.95rem;font-weight:500}
+.wrap{max-width:640px;margin:0 auto;min-width:0;overflow-x:clip;padding-block:14px calc(132px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+h1{font-size:1.5rem;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+h2{font-size:1.08rem;font-weight:600}
 .num{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:500}
 .muted{color:var(--muted)}
 .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
-.catpic{width:48px;height:61px;border-radius:10px;object-fit:contain;flex:none;box-shadow:0 0 0 1px var(--line)}
-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
-.month{display:flex;align-items:center;gap:6px}
-.month span{min-width:9.5em;text-align:center;font-weight:600;text-transform:capitalize}
-button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px}
+.hint{font-size:.78rem;color:var(--muted)}
+.note{font-size:.82rem;color:var(--muted);line-height:1.5;margin:0}
+.sec-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
+.view{display:flex;flex-direction:column;gap:18px}
+
+/* header */
+.top{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.catpic{width:52px;height:66px;border-radius:16px;object-fit:cover;flex:none;box-shadow:0 0 0 3px var(--surface),var(--shadow)}
+.say{position:relative;margin-top:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:6px 11px;font-size:.84rem;line-height:1.35;color:var(--ink);justify-self:start;max-width:100%}
+.month{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow)}
+.month span{font-family:var(--f-display);font-weight:600;text-transform:capitalize}
+.icon{width:38px;height:38px;padding:0;border-radius:999px;border:0;background:var(--surface-2);display:grid;place-items:center}
+.icon svg{width:18px;height:18px}
+
+/* controls */
+button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:7px 13px}
 button:hover{border-color:var(--muted)}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.icon{width:36px;height:36px;padding:0;font-size:1.1rem;line-height:1}
-.mode{font-size:.8rem;padding:3px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
-
-.strip{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border:1px solid var(--line);border-radius:12px}
-.strip>div{padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.strip>div+div{border-left:1px solid var(--line)}
-.strip .num{font-size:1.25rem;overflow-wrap:anywhere}
-.strip .inc{color:var(--inc)} .strip .exp{color:var(--exp)}
-.strip>.meter{padding:0;border-left:0;grid-column:1/-1;height:6px;background:var(--exp-soft);border-top:1px solid var(--line);border-radius:0 0 12px 12px;overflow:hidden}
-.meter i{display:block;height:100%;background:var(--exp);width:0;transition:width .4s}
-@media (max-width:520px){.strip{grid-template-columns:1fr 1fr}.strip>div:first-child{grid-column:1/-1;border-bottom:1px solid var(--line)}.strip>div:nth-child(3){border-left:1px solid var(--line)}.strip>div:nth-child(2){border-left:0}}
-
-form{display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;align-items:end}
-.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
-.seg button{border:0;border-radius:0;padding:9px 14px}
+button:disabled{opacity:.6;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.filebtn:focus-within{outline:2px solid var(--caramel);outline-offset:2px}
+.btn-sm{font-size:.84rem;padding:5px 11px;border-radius:999px}
+.add{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600;padding:12px 16px;border-radius:14px;font-family:var(--f-display)}
+.add:hover{border-color:var(--accent)}
+.danger{color:var(--exp);border-color:color-mix(in srgb,var(--exp) 35%,var(--line))}
+.danger-fill{background:var(--exp);border-color:var(--exp);color:#fff;font-weight:600}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+input[type="date"]{-webkit-appearance:none;appearance:none;min-height:2.85em;display:block}
+input::-webkit-date-and-time-value{text-align:left}
+input,select{max-width:100%;width:100%;min-width:0;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.seg{display:flex;background:var(--surface-2);border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;border-radius:11px;padding:9px 12px;background:transparent;color:var(--muted);font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 .seg button[aria-pressed="true"].e{background:var(--exp);color:#fff}
 .seg button[aria-pressed="true"].i{background:var(--inc);color:#fff}
-.field{display:flex;flex-direction:column;gap:4px;min-width:0}
-input[type="date"]{-webkit-appearance:none;appearance:none;min-height:2.65em;display:block}
-input::-webkit-date-and-time-value{text-align:left}
-input,select{max-width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
-.f-note{grid-column:1/3}
-.add{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600;padding:9px 14px}
-@media (max-width:560px){form{grid-template-columns:1fr 1fr}.seg{grid-column:1/-1}.f-note{grid-column:1/-1}.add{grid-column:1/-1}}
-
-.cats{display:flex;flex-direction:column;gap:10px}
-.cat>span:last-child{text-align:right;white-space:nowrap}
-.cat{display:grid;grid-template-columns:minmax(0,8em) minmax(40px,1fr) 8.6em;gap:12px;align-items:center;font-size:.9rem}
-.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--exp);border-radius:5px}
-.bar.inc i{background:var(--inc)}
-.tabs{display:flex;gap:6px}
-.tabs button{font-size:.82rem;padding:4px 10px}
-.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.sec-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-
-.day{display:flex;flex-direction:column}
-.day-h{display:flex;justify-content:space-between;padding:12px 0 6px;border-bottom:1px solid var(--line);font-size:.85rem}
-.row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
-.row .t{min-width:0}
-.row .t b{font-weight:500}
-.row .t small{display:block;color:var(--muted);overflow-wrap:anywhere}
-.row .amt.inc{color:var(--inc)} .row .amt.exp{color:var(--ink)}
-.chip{font-size:.68rem;padding:1px 6px;border-radius:4px;background:var(--line);color:var(--muted);margin-left:6px;vertical-align:1px}
-.del{border:0;background:none;color:var(--muted);padding:4px 6px}
-.del:hover{color:var(--exp)}
-.del.confirm{color:#fff;background:var(--exp);border-radius:6px;font-size:.78rem}
-.empty{padding:28px 20px;text-align:center;border:1px dashed var(--line);border-radius:12px;display:flex;flex-direction:column;gap:10px;align-items:center}
-.imp{display:flex;flex-direction:column;gap:12px}
-.drop{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border:1px dashed var(--line);border-radius:12px;background:var(--surface)}
-.drop.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
-.drop p{margin:0;min-width:0;flex:1 1 260px}
-.filebtn{position:relative;overflow:hidden;display:inline-block;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer;background:var(--surface)}
+.tabs{display:flex;background:var(--surface-2);border-radius:999px;padding:3px;gap:2px}
+.tabs button{border:0;background:transparent;border-radius:999px;font-size:.82rem;padding:5px 12px;color:var(--muted);font-weight:600}
+.tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.filebtn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 16px;font-weight:600;cursor:pointer}
+.filebtn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line);font-weight:500}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
-.preview{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.preview h2{overflow-wrap:anywhere;min-width:0}
-.pv-sum{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem}
-.pv-list{max-height:380px;overflow-y:auto;border-top:1px solid var(--line)}
-.pv-row{display:grid;grid-template-columns:auto 5.5em 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:.88rem}
-.pv-row.dup{opacity:.5}
-.pv-row select{padding:4px 6px;font-size:.85rem}
-.pv-row .n{min-width:0}
-.pv-row .n small{display:block;color:var(--muted);overflow-wrap:anywhere}
-.pv-act{display:flex;gap:8px;flex-wrap:wrap}
-@media (max-width:520px){.pv-row{grid-template-columns:auto 1fr auto}.pv-row .d{grid-column:2/4;order:-1;font-size:.78rem;color:var(--muted)}}
 
-.trend{display:flex;flex-direction:column;gap:10px}
+/* hero */
+.hero{gap:14px}
+.hero .big{font-family:var(--f-display);font-weight:700;font-size:2.35rem;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.meter{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--caramel);border-radius:999px;transition:width .5s}
+.meter.over i{background:var(--exp)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 9px;align-items:center;background:var(--surface-2);border-radius:16px;padding:12px 10px}
+.tile .ic{grid-row:span 2;width:30px;height:30px;border-radius:999px;display:grid;place-items:center}
+.tile .ic svg{width:17px;height:17px}
+.tile.inc .ic{background:var(--inc-soft);color:var(--inc)}
+.tile.exp .ic{background:var(--exp-soft);color:var(--exp)}
+.tile .num{font-size:clamp(.8rem,3.7vw,1.05rem);white-space:nowrap;min-width:0}
+.tile>span:not(.ic){min-width:0}
+
+/* categories */
+.cats{display:flex;flex-direction:column;gap:12px}
+.cat{display:grid;grid-template-columns:minmax(0,8em) minmax(40px,1fr) 8.6em;gap:12px;align-items:center;font-size:.9rem}
+.cat>span:last-child{text-align:right;white-space:nowrap}
+.bar{height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c-exp);border-radius:999px}
+.bar.inc i{background:var(--c-inc)}
+
+/* chart */
 .legend{display:flex;gap:16px;font-size:.82rem;color:var(--muted);flex-wrap:wrap}
-.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .chart{position:relative;min-width:0}
 .chart svg{display:block;width:100%;overflow:visible;touch-action:pan-y}
 .chart text{font-family:var(--f-body);fill:var(--muted);font-size:11px}
 .chart .num-t{font-family:var(--f-num);font-variant-numeric:tabular-nums}
 .chart .sel text{fill:var(--ink);font-weight:600}
 .chart .hit{fill:transparent;cursor:pointer}
-.chart .col.sel .band{fill:var(--line);opacity:.55}
+.chart .col.sel .band{fill:var(--surface-2)}
 .chart .col .band{fill:transparent}
-.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem;box-shadow:0 6px 18px rgb(0 0 0 / .14);white-space:nowrap;z-index:2;display:grid;grid-template-columns:auto auto;gap:2px 12px}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:8px 11px;font-size:.82rem;box-shadow:var(--shadow);white-space:nowrap;z-index:2;display:grid;grid-template-columns:auto auto;gap:2px 12px}
 .tip b{grid-column:1/-1;text-transform:capitalize}
 .tip .num{text-align:right}
 details.mt summary{cursor:pointer;color:var(--muted);font-size:.85rem}
-details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .mt-wrap{overflow-x:auto}
-.mt table{border-collapse:collapse;width:100%;font-size:.85rem;margin-top:6px}
-.mt th,.mt td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-.mt th:first-child,.mt td:first-child{text-align:left;text-transform:capitalize}
-.mt th{font-weight:600;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+.mt table,.sal-table table{border-collapse:collapse;width:100%;font-size:.85rem;margin-top:6px}
+.mt th,.mt td,.sal-table th,.sal-table td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.mt th:first-child,.mt td:first-child,.sal-table th:first-child,.sal-table td:first-child{text-align:left;text-transform:capitalize}
+.mt th,.sal-table th{font-weight:600;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.04em}
+.sal-table{overflow-x:auto}
+.sal-table td:first-child{max-width:6.5em;overflow:hidden;text-overflow:ellipsis}
+.sal-table tr.cur td{font-weight:600;background:var(--surface-2)}
 
-.views{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px}
-.views button{flex:1;border:0;border-radius:7px;padding:8px 10px;font-weight:600;color:var(--muted);background:none}
-.views button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
-.view{display:flex;flex-direction:column;gap:20px}
+/* journal */
+.day{display:flex;flex-direction:column;gap:6px}
+.day-h{display:flex;justify-content:space-between;padding:0 4px;font-size:.84rem;color:var(--muted);font-weight:600}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:2px 14px}
+.row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:11px 0}
+.row+.row{border-top:1px solid var(--line)}
+.av{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-display);font-weight:600;background:var(--surface-2);color:var(--accent);font-size:.95rem}
+.av.inc{background:var(--inc-soft);color:var(--inc)}
+.row .t{min-width:0}
+.row .t b{font-weight:500}
+.row .t small{display:block;color:var(--muted);overflow-wrap:anywhere;font-size:.8rem}
+.row .amt.inc{color:var(--inc)}
+.chip{font-size:.68rem;padding:1px 7px;border-radius:999px;background:var(--caramel-soft);color:var(--accent);margin-left:6px;vertical-align:1px}
+.del{border:0;background:none;color:var(--muted);padding:4px 6px;border-radius:8px}
+.del:hover{color:var(--exp)}
+.del.confirm{color:#fff;background:var(--exp);font-size:.78rem}
+.journal{display:flex;flex-direction:column;gap:16px}
+.empty{padding:26px 20px;text-align:center;border:1.5px dashed var(--line);border-radius:20px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.confirm-box{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--exp);border-radius:18px;background:var(--exp-soft)}
+.confirm-box b{font-size:1.05rem;font-family:var(--f-display)}
+.pv-act{display:flex;gap:8px;flex-wrap:wrap}
+
+/* import / more */
+.drop.over{outline:2px dashed var(--caramel);outline-offset:-6px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap}
+.preview h2{overflow-wrap:anywhere;min-width:0}
+.pv-sum{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem}
+.pv-list{max-height:380px;overflow-y:auto;border-top:1px solid var(--line)}
+.pv-row{display:grid;grid-template-columns:auto 5.5em 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.pv-row.dup{opacity:.5}
+.pv-row select{padding:5px 8px;font-size:.85rem}
+.pv-row .n{min-width:0}
+.pv-row .n small{display:block;color:var(--muted);overflow-wrap:anywhere}
+@media (max-width:520px){.pv-row{grid-template-columns:auto 1fr auto}.pv-row .d{grid-column:2/4;order:-1;font-size:.78rem;color:var(--muted)}}
+.about{display:flex;gap:12px;align-items:center}
+.about img{width:44px;height:56px;border-radius:12px;object-fit:cover}
+
+/* salary */
 .sal-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 .sal-form .wide{grid-column:1/-1}
-.hint{font-size:.78rem;color:var(--muted)}
-.sal-hero{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.sal-hero>div{display:flex;flex-direction:column;gap:2px;min-width:0}
-.sal-hero .big{font-size:1.6rem;color:var(--inc)}
-.sal-hero .num{overflow-wrap:anywhere}
-.sal-hero .split{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.9rem}
-@media (max-width:520px){.sal-hero{grid-template-columns:1fr 1fr}.sal-hero>div:first-child{grid-column:1/-1}}
-.rate{display:inline-block;font-size:.72rem;padding:1px 6px;border-radius:4px;background:var(--line);color:var(--muted);font-family:var(--f-num)}
-.rate.up{background:var(--exp-soft);color:var(--exp)}
-.sal-table{overflow-x:auto}
-.sal-table table{border-collapse:collapse;width:100%;font-size:.85rem}
-.sal-table th,.sal-table td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-.sal-table th:first-child,.sal-table td:first-child{text-align:left;text-transform:capitalize}
-.sal-table th{font-weight:600;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em}
-.sal-table td:first-child{max-width:6.5em;overflow:hidden;text-overflow:ellipsis}
-.sal-table tr.cur td{font-weight:600;background:color-mix(in srgb,var(--accent) 7%,transparent)}
-.sal-table tfoot td{font-weight:600;border-bottom:0}
-.note{font-size:.8rem;color:var(--muted);line-height:1.5;margin:0}
-
-.pay-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .pay-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .pay-nums>div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .pay-nums .num{font-size:1.15rem;overflow-wrap:anywhere}
-.pill{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;padding:4px 10px;border-radius:999px;align-self:flex-start}
+@media (max-width:520px){.pay-nums{grid-template-columns:1fr 1fr}.pay-nums>div:first-child{grid-column:1/-1}}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;padding:5px 12px;border-radius:999px;align-self:flex-start}
 .pill.ok{background:var(--inc-soft);color:var(--inc)}
-.pill.none{background:var(--line);color:var(--muted)}
-.pill.wait{background:var(--line);color:var(--ink)}
+.pill.none{background:var(--surface-2);color:var(--muted)}
+.pill.wait{background:var(--caramel-soft);color:var(--accent)}
 .pill.bad{background:var(--exp-soft);color:var(--exp)}
-.prog{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
-.prog i{display:block;height:100%;background:var(--inc);border-radius:4px}
+.prog{height:10px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--inc);border-radius:999px}
 .plist{display:flex;flex-direction:column}
-.prow{display:grid;grid-template-columns:3.2em 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.prow{display:grid;grid-template-columns:3.2em 1fr auto;gap:10px;align-items:center;padding:9px 0;font-size:.9rem}
+.prow+.prow{border-top:1px solid var(--line)}
 .prow .n{min-width:0}
 .prow .n small{display:block;color:var(--muted);overflow-wrap:anywhere}
-.prow select{padding:3px 6px;font-size:.85rem;width:auto;max-width:100%}
+.prow select{padding:4px 8px;font-size:.85rem;width:auto;max-width:100%}
 .prow .d{color:var(--muted);font-size:.8rem}
 .st{font-size:.8rem;white-space:nowrap}
 .st.ok{color:var(--inc)} .st.bad{color:var(--exp)} .st.wait{color:var(--muted)}
-details.cfg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
-details.cfg summary{cursor:pointer;font-weight:600}
+details.cfg summary{cursor:pointer;font-weight:600;font-family:var(--f-display)}
 details.cfg[open] summary{margin-bottom:12px}
-details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@media (max-width:520px){.pay-nums{grid-template-columns:1fr 1fr}.pay-nums>div:first-child{grid-column:1/-1}}
-
+details.cfg.inner{background:var(--surface-2);border-radius:16px;padding:12px 14px}
 .trow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line);align-items:baseline}
 .trow .lbl{font-weight:600}
 .trow .calc{color:var(--muted);font-size:.82rem;grid-column:1}
@@ -201,107 +212,104 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
 .trow .st{grid-column:2;text-align:right}
 .trip-cfg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start}
 @media (max-width:520px){.trip-cfg{grid-template-columns:1fr 1fr}.trip-cfg .f-rate{grid-column:1/-1}}
-.danger{color:var(--exp);border-color:color-mix(in srgb,var(--exp) 40%,var(--line))}
-.danger-fill{background:var(--exp);border-color:var(--exp);color:#fff;font-weight:600}
-.confirm-box{display:flex;flex-direction:column;gap:8px;padding:14px 16px;margin-top:10px;border:1px solid var(--exp);border-radius:12px;background:var(--exp-soft)}
-.confirm-box b{font-size:1.05rem}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.88rem;opacity:0;transition:opacity .2s;pointer-events:none}
+
+/* tab bar + fab + sheet */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tabbar .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;color:var(--muted);font-size:.7rem;font-weight:600;border-radius:12px}
+.tabbar button span.ib{width:46px;height:28px;border-radius:999px;display:grid;place-items:center;transition:background .2s}
+.tabbar button svg{width:21px;height:21px}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.tabbar button[aria-current="page"] span.ib{background:var(--caramel-soft)}
+.fab{position:fixed;z-index:21;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(84px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:20px;border:0;padding:0;
+  background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 10px 24px -8px rgb(74 45 20 / .55)}
+.fab svg{width:26px;height:26px}
+.fab:hover{border:0}
+@media (min-width:700px){.fab{right:calc(50% - 320px + 4px)}}
+.sheet-back{position:fixed;inset:0;z-index:30;background:rgb(30 20 10 / .45)}
+.sheet{position:fixed;z-index:31;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;background:var(--surface);border-radius:26px 26px 0 0;box-shadow:0 -10px 40px -10px rgb(0 0 0 / .35);
+  padding:8px max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));max-height:92vh;overflow-y:auto;animation:up .25s ease-out}
+.sheet .grab{width:44px;height:5px;border-radius:999px;background:var(--line);margin:4px auto 10px}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+#form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#form .wide{grid-column:1/-1}
+#amount{font-family:var(--f-display);font-size:1.7rem;font-weight:600;padding:10px 14px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.x{width:36px;height:36px;padding:0;border-radius:999px;border:0;background:var(--surface-2);display:grid;place-items:center}
+.x svg{width:16px;height:16px}
+
+.toast{position:fixed;z-index:40;left:50%;bottom:calc(154px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:.88rem;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="brand">
-      <img class="catpic" src="cat.jpg" alt="Котик с пустым кошельком" width="48" height="61">
-      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+  <header class="top">
+    <img class="catpic" src="cat.jpg" alt="Котик с пустым кошельком" width="52" height="66">
+    <div style="min-width:0;display:flex;flex-direction:column">
       <h1>Где деньги?</h1>
-      <span class="mode" id="mode">Данные хранятся на этом телефоне</span>
-      </div>
+      <span class="say" id="say">Мяу. Сейчас посчитаем.</span>
     </div>
-    <div class="month">
-      <button class="icon" id="prev" aria-label="Предыдущий месяц">‹</button>
+    <div class="month" id="monthBar">
+      <button class="icon" id="prev" aria-label="Предыдущий месяц"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
       <span id="monthLabel"></span>
-      <button class="icon" id="next" aria-label="Следующий месяц">›</button>
+      <button class="icon" id="next" aria-label="Следующий месяц"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
     </div>
   </header>
 
-  <nav class="views" aria-label="Разделы">
-    <button type="button" id="vbLedger" aria-pressed="true">Учёт</button>
-    <button type="button" id="vbSalary" aria-pressed="false">Зарплата</button>
-  </nav>
+  <div class="view" id="vHome">
+    <section class="card hero" aria-label="Итоги месяца">
+      <span class="label" id="heroLabel">Остаток за месяц</span>
+      <span class="big" id="sBal">0 ₽</span>
+      <div class="meter" id="meterBox" title="Доля потраченного от дохода"><i id="meter"></i></div>
+      <span class="hint" id="spentNote"></span>
+      <div class="tiles">
+        <div class="tile inc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7 7 17M7 9v8h8"/></svg></span><span class="label">Доходы</span><span class="num" id="sInc">0 ₽</span></div>
+        <div class="tile exp"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></span><span class="label">Расходы</span><span class="num" id="sExp">0 ₽</span></div>
+      </div>
+    </section>
 
-  <div class="view" id="vLedger">
+    <section class="card" aria-label="По категориям">
+      <div class="sec-head"><h2>По категориям</h2>
+        <div class="tabs"><button type="button" id="cExp" aria-pressed="true">Расходы</button><button type="button" id="cInc" aria-pressed="false">Доходы</button></div>
+      </div>
+      <div id="catList" class="cats"></div>
+    </section>
 
-  <section class="strip" aria-label="Итоги месяца">
-    <div><span class="label">Остаток за месяц</span><span class="num" id="sBal">0 ₽</span></div>
-    <div><span class="label">Доходы</span><span class="num inc" id="sInc">0 ₽</span></div>
-    <div><span class="label">Расходы</span><span class="num exp" id="sExp">0 ₽</span></div>
-    <div class="meter" title="Доля потраченного от дохода"><i id="meter"></i></div>
-  </section>
+    <section class="card trend" aria-label="По месяцам">
+      <div class="sec-head"><h2>По месяцам</h2>
+        <div class="tabs"><button type="button" id="r6" aria-pressed="true">6 мес</button><button type="button" id="r12" aria-pressed="false">12 мес</button></div>
+      </div>
+      <div class="legend"><span><i class="sw" style="background:var(--c-inc)"></i>Доходы</span><span><i class="sw" style="background:var(--c-exp)"></i>Расходы</span><span id="netNote">Под месяцем — остаток</span></div>
+      <div class="chart" id="chart"><div class="tip" id="tip" hidden></div></div>
+      <details class="mt"><summary>Таблица по месяцам</summary><div class="mt-wrap" id="mtable"></div></details>
+    </section>
+  </div>
 
-  <section class="trend" aria-label="По месяцам">
-    <div class="sec-head"><h2>По месяцам</h2>
-      <div class="tabs"><button type="button" id="r6" aria-pressed="true">6 мес</button><button type="button" id="r12" aria-pressed="false">12 мес</button></div>
-    </div>
-    <div class="legend"><span><i class="sw" style="background:var(--c-inc)"></i>Доходы</span><span><i class="sw" style="background:var(--c-exp)"></i>Расходы</span><span id="netNote">Под месяцем — остаток</span></div>
-    <div class="chart" id="chart"><div class="tip" id="tip" hidden></div></div>
-    <details class="mt"><summary>Таблица по месяцам</summary><div class="mt-wrap" id="mtable"></div></details>
-  </section>
-
-  <form id="form" autocomplete="off">
-    <div class="seg" role="group" aria-label="Тип операции">
-      <button type="button" class="e" id="tExp" aria-pressed="true">Расход</button>
-      <button type="button" class="i" id="tInc" aria-pressed="false">Доход</button>
-    </div>
-    <label class="field"><span class="label">Сумма, ₽</span><input id="amount" inputmode="decimal" placeholder="0" required></label>
-    <label class="field"><span class="label">Категория</span><select id="cat"></select></label>
-    <label class="field f-note"><span class="label">Комментарий</span><input id="note" maxlength="80" placeholder="Например: Пятёрочка у дома"></label>
-    <label class="field"><span class="label">Дата</span><input id="date" type="date" required></label>
-    <button class="add" type="submit" id="addBtn">Записать расход</button>
-  </form>
-
-  <section class="imp" aria-label="Импорт выписки">
-    <div class="drop" id="drop">
-      <p><b>Импорт выписки из банка</b><br><span class="muted">Файл .xlsx или .csv с колонками «Дата операции» и «Сумма». Уже загруженные операции не задвоятся.</span></p>
-      <label class="filebtn">Выбрать файл<input type="file" id="file" accept=".xlsx,.xls,.csv"></label>
-    </div>
-    <div class="preview" id="preview" hidden></div>
-  </section>
-
-  <section class="drop" aria-label="Резервная копия">
-    <p><b>Резервная копия</b><br><span class="muted" id="bkInfo"></span></p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="bkSave">Сохранить копию</button><label class="filebtn" style="border-color:var(--line);color:var(--ink);font-weight:400">Восстановить<input type="file" id="bkFile" accept=".json,application/json"></label></div>
-  </section>
-
-  <section class="cats" aria-label="По категориям">
-    <div class="sec-head"><h2>По категориям</h2>
-      <div class="tabs"><button type="button" id="cExp" aria-pressed="true">Расходы</button><button type="button" id="cInc" aria-pressed="false">Доходы</button></div>
-    </div>
-    <div id="catList" class="cats"></div>
-  </section>
-
-  <section aria-label="Журнал операций">
-    <div class="sec-head"><h2>Операции</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted" id="count"></span><button type="button" id="jToggle" aria-controls="journal" aria-expanded="true">Свернуть</button><button type="button" class="danger" id="delAll">Удалить все</button></div></div>
-    <div class="confirm-box" id="delBox" role="alertdialog" aria-labelledby="delQ" hidden>
-      <b id="delQ">Вы уверены?</b>
-      <span class="muted" id="delText"></span>
-      <div class="pv-act"><button type="button" class="danger-fill" id="delYes">Да, удалить все</button><button type="button" id="delMonth"></button><button type="button" id="delNo">Отмена</button></div>
-    </div>
-    <div id="journal"></div>
-  </section>
+  <div class="view" id="vOps" hidden>
+    <section aria-label="Журнал операций" style="display:flex;flex-direction:column;gap:12px">
+      <div class="sec-head"><h2>Операции <span class="muted" id="count" style="font-family:var(--f-body);font-weight:400;font-size:.9rem"></span></h2>
+        <div class="row-actions"><button type="button" class="btn-sm" id="jToggle" aria-controls="journal" aria-expanded="true">Свернуть</button><button type="button" class="btn-sm danger" id="delAll">Удалить все</button></div></div>
+      <div class="confirm-box" id="delBox" role="alertdialog" aria-labelledby="delQ" hidden>
+        <b id="delQ">Вы уверены?</b>
+        <span class="muted" id="delText"></span>
+        <div class="pv-act"><button type="button" class="danger-fill" id="delYes">Да, удалить все</button><button type="button" id="delMonth"></button><button type="button" id="delNo">Отмена</button></div>
+      </div>
+      <div id="journal" class="journal"></div>
+    </section>
   </div>
 
   <div class="view" id="vSalary" hidden>
-    <section class="pay-card" aria-label="Выплаты за месяц" id="payCard"></section>
+    <section class="card pay-card" aria-label="Выплаты за месяц" id="payCard"></section>
 
-    <section class="pay-card" aria-label="Командировочные" id="tripCard">
+    <section class="card pay-card" aria-label="Командировочные" id="tripCard">
       <div class="sec-head"><h2 id="tripTitle">Командировочные</h2><span class="muted" id="tripSum"></span></div>
       <span class="pill wait" id="tripPill"></span>
       <div id="tripRows"></div>
-      <details class="cfg" id="tripCfg" style="padding:10px 12px">
+      <details class="cfg inner" id="tripCfg">
         <summary>Условия командировки</summary>
         <div class="trip-cfg">
           <label class="field f-rate"><span class="label">Суточные, ₽ в день</span><input id="tripRate" inputmode="decimal" placeholder="700"></label>
@@ -312,30 +320,30 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
       </details>
     </section>
 
-    <section aria-label="Выплаты от работодателя" style="display:flex;flex-direction:column;gap:8px">
+    <section class="card" aria-label="Выплаты от работодателя">
       <div class="sec-head"><h2>Выплаты от работодателя</h2><span class="muted" id="payCount"></span></div>
       <div class="plist" id="payList"></div>
     </section>
 
-    <section aria-label="Другие поступления" style="display:flex;flex-direction:column;gap:8px">
-      <div class="sec-head"><h2>Другие поступления</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted">в зарплату не входят</span><button type="button" id="oToggle" aria-controls="otherBody" aria-expanded="true">Скрыть</button></div></div>
+    <section class="card" aria-label="Другие поступления">
+      <div class="sec-head"><h2>Другие поступления</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted">в зарплату не входят</span><button type="button" class="btn-sm" id="oToggle" aria-controls="otherBody" aria-expanded="true">Скрыть</button></div></div>
       <div id="otherBody" style="display:flex;flex-direction:column;gap:8px">
       <p class="note">Переводы, кэшбэк и прочее. Если здесь оказалась зарплата, поменяйте категорию — она перейдёт в выплаты.</p>
       <div class="plist" id="otherList"></div>
       </div>
     </section>
 
-    <section aria-label="По месяцам" style="display:flex;flex-direction:column;gap:10px">
+    <section class="card" aria-label="Сверка за год">
       <div class="sec-head"><h2>Сверка за год, ₽</h2><span class="muted" id="salYearNote"></span></div>
       <div class="sal-table" id="salTable"></div>
     </section>
 
-    <details class="cfg" id="cfg">
+    <details class="card cfg" id="cfg">
       <summary>Условия зарплаты</summary>
       <div class="sal-form">
         <div class="seg wide" role="group" aria-label="Что известно">
-          <button type="button" class="i" id="smNet" aria-pressed="true">Знаю «на руки»</button>
-          <button type="button" class="i" id="smGross" aria-pressed="false">Знаю оклад</button>
+          <button type="button" id="smNet" aria-pressed="true">Знаю «на руки»</button>
+          <button type="button" id="smGross" aria-pressed="false">Знаю оклад</button>
         </div>
         <label class="field wide"><span class="label" id="salAmtLabel">На руки за месяц, ₽</span><input id="salAmt" inputmode="decimal" placeholder="Например, 87 000"></label>
         <label class="field" id="fBonus"><span class="label">Надбавки, %</span><input id="salBonus" inputmode="decimal" placeholder="0"><span class="hint">Районный коэффициент, постоянная премия</span></label>
@@ -348,6 +356,50 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
       <p class="note" style="margin-top:12px" id="cfgNote"></p>
     </details>
   </div>
+
+  <div class="view" id="vMore" hidden>
+    <section class="card drop" id="drop" aria-label="Импорт выписки">
+      <h2>Импорт выписки из банка</h2>
+      <p class="note">Файл .xlsx или .csv с колонками «Дата операции» и «Сумма». Категории подберутся сами, уже загруженные операции не задвоятся.</p>
+      <div class="row-actions"><label class="filebtn">Выбрать файл<input type="file" id="file" accept=".xlsx,.xls,.csv"></label></div>
+    </section>
+    <div class="card preview" id="preview" hidden></div>
+
+    <!--pwa-only--><section class="card" aria-label="Резервная копия">
+      <h2>Резервная копия</h2>
+      <p class="note" id="bkInfo"></p>
+      <div class="row-actions"><button type="button" id="bkSave">Сохранить копию</button><label class="filebtn ghost">Восстановить<input type="file" id="bkFile" accept=".json,application/json"></label></div>
+    </section><!--/pwa-only-->
+
+    <section class="card" aria-label="О приложении">
+      <div class="about"><img src="cat.jpg" alt="" width="44" height="56"><div><h2>Где деньги?</h2><span class="hint" id="mode">Данные хранятся на этом телефоне</span></div></div>
+    </section>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Разделы"><div class="in">
+  <button type="button" id="nbHome" aria-current="page"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z"/></svg></span>Обзор</button>
+  <button type="button" id="nbOps"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1.2" fill="currentColor"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor"/><circle cx="4.5" cy="17.5" r="1.2" fill="currentColor"/></svg></span>Операции</button>
+  <button type="button" id="nbSalary"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8.5 7V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5V7M3 12.5h18"/></svg></span>Зарплата</button>
+  <button type="button" id="nbMore"><span class="ib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg></span>Ещё</button>
+</div></nav>
+<button type="button" class="fab" id="fab" aria-label="Добавить запись"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<div class="sheet-back" id="sheetBack" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+  <div class="grab"></div>
+  <div class="sheet-head"><h2 id="sheetTitle">Новая запись</h2><button type="button" class="x" id="sheetX" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <form id="form" autocomplete="off">
+    <div class="seg wide" role="group" aria-label="Тип операции">
+      <button type="button" class="e" id="tExp" aria-pressed="true">Расход</button>
+      <button type="button" class="i" id="tInc" aria-pressed="false">Доход</button>
+    </div>
+    <label class="field wide"><span class="label">Сумма, ₽</span><input id="amount" inputmode="decimal" placeholder="0" required></label>
+    <label class="field"><span class="label">Категория</span><select id="cat"></select></label>
+    <label class="field"><span class="label">Дата</span><input id="date" type="date" required></label>
+    <label class="field wide"><span class="label">Комментарий</span><input id="note" maxlength="80" placeholder="Например: Пятёрочка у дома"></label>
+    <button class="add wide" type="submit" id="addBtn">Записать расход</button>
+  </form>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -438,12 +490,25 @@ $("form").addEventListener("submit",async e=>{
     note:$("note").value.trim(),date:$("date").value||iso(new Date()),createdAt:Date.now()};
   const btn=$("addBtn");btn.disabled=true;
   try{await store.add(t);$("amount").value="";$("note").value="";$("amount").focus();
-    toast(t.type==="exp"?"Расход записан":"Доход записан");
+    toast(t.type==="exp"?"Расход записан":"Доход записан");closeSheet();
     const [y,m]=t.date.split("-").map(Number);
     if(y!==state.month.getFullYear()||m-1!==state.month.getMonth()){state.month=new Date(y,m-1,1);render()}
   }catch(err){toast("Не удалось сохранить: нет прав на запись")}
   btn.disabled=false;
 });
+
+/* ---------- add sheet ---------- */
+function openSheet(type){
+  if(type)setType(type);
+  const now=new Date(),cur=state.month.getFullYear()===now.getFullYear()&&state.month.getMonth()===now.getMonth();
+  if(!$("date").value||!cur)$("date").value=cur?iso(now):iso(new Date(state.month.getFullYear(),state.month.getMonth(),Math.min(15,new Date(state.month.getFullYear(),state.month.getMonth()+1,0).getDate())));
+  $("sheet").hidden=false;$("sheetBack").hidden=false;document.body.style.overflow="hidden";
+  setTimeout(()=>$("amount").focus(),60);
+}
+function closeSheet(){$("sheet").hidden=true;$("sheetBack").hidden=true;document.body.style.overflow="";$("fab").focus()}
+$("fab").onclick=()=>openSheet(sal.view==="salary"?"inc":null);
+$("sheetX").onclick=closeSheet;$("sheetBack").onclick=closeSheet;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)closeSheet()});
 
 /* ---------- navigation ---------- */
 $("prev").onclick=()=>{state.month=new Date(state.month.getFullYear(),state.month.getMonth()-1,1);render()};
@@ -465,7 +530,16 @@ function render(){
   $("sInc").textContent="+"+fmt(inc);$("sExp").textContent="−"+fmt(exp);
   $("sBal").textContent=(bal<0?"−":"")+fmt(Math.abs(bal));
   $("sBal").style.color=bal<0?"var(--exp)":"var(--ink)";
-  $("meter").style.width=(inc>0?Math.min(100,exp/inc*100):(exp>0?100:0))+"%";
+  const share=inc>0?exp/inc*100:(exp>0?100:0);
+  $("meter").style.width=Math.min(100,share)+"%";$("meterBox").classList.toggle("over",share>100);
+  const mGen=m.toLocaleDateString("ru-RU",{day:"numeric",month:"long"}).replace(/^\d+\s*/,"");
+  $("heroLabel").textContent="Остаток за "+m.toLocaleDateString("ru-RU",{month:"long"});
+  $("spentNote").textContent=inc>0?`Потрачено ${Math.round(share)}% от дохода`:exp>0?"Доходов в этом месяце нет":"Записей в этом месяце пока нет";
+  $("say").textContent=!state.tx.length?"Мяу. Загрузи выписку — посмотрим, где деньги."
+    :!rows.length?"В этом месяце пусто. Подозрительно."
+    :bal<0?`Опять минус: расходы больше доходов на ${fmt(-bal)}.`
+    :share<70?"Деньги есть! Можно купить корм получше."
+    :"Пока в плюсе. Держимся.";
 
   // categories
   $("cExp").setAttribute("aria-pressed",state.catView==="exp");$("cInc").setAttribute("aria-pressed",state.catView==="inc");
@@ -482,7 +556,7 @@ function render(){
   if(!state.loaded){j.innerHTML=`<div class="empty muted">Загружаю операции…</div>`;return}
   if(!rows.length){
     j.innerHTML=`<div class="empty"><b>За ${esc($("monthLabel").textContent)} записей нет</b>
-      <span class="muted">Добавьте первую операцию через форму выше${state.tx.length?"":" или загрузите пример месяца, чтобы посмотреть, как всё работает"}.</span>
+      <span class="muted">Добавьте операцию кнопкой «+»${state.tx.length?"":", загрузите выписку в разделе «Ещё» или посмотрите пример месяца"}.</span>
       ${state.tx.length||!store?"":`<button type="button" id="ex">Загрузить пример</button>`}</div>`;
     const ex=$("ex"); if(ex) ex.onclick=()=>loadExamples(ex);
     return;
@@ -490,13 +564,13 @@ function render(){
   const days={};rows.forEach(t=>(days[t.date]=days[t.date]||[]).push(t));
   j.innerHTML=Object.entries(days).map(([d,list])=>{
     const net=list.reduce((s,t)=>s+(t.type==="inc"?t.amount:-t.amount),0);
-    const label=new Date(d+"T12:00").toLocaleDateString("ru-RU",{day:"numeric",month:"long",weekday:"short"});
-    return `<div class="day"><div class="day-h"><span class="label" style="text-transform:none;letter-spacing:0;font-size:.85rem">${label}</span>
-      <span class="num muted">${net>=0?"+":"−"}${fmt(Math.abs(net))}</span></div>
-      ${list.map(t=>`<div class="row"><div class="t"><b>${esc(t.cat)}</b>${t.example?'<span class="chip">пример</span>':""}
+    const lw=new Date(d+"T12:00").toLocaleDateString("ru-RU",{day:"numeric",month:"long",weekday:"short"}),label=lw.charAt(0).toUpperCase()+lw.slice(1);
+    return `<div class="day"><div class="day-h"><span>${label}</span>
+      <span class="num">${net>=0?"+":"−"}${fmt(Math.abs(net))}</span></div><div class="list">
+      ${list.map(t=>`<div class="row"><span class="av ${t.type}" aria-hidden="true">${esc((t.cat||"?").slice(0,1))}</span><div class="t"><b>${esc(t.cat)}</b>${t.example?'<span class="chip">пример</span>':""}
         ${t.note?`<small>${esc(t.note)}</small>`:""}</div>
         <span class="num amt ${t.type}">${t.type==="inc"?"+":"−"}${fmt(t.amount)}</span>
-        <button type="button" class="del" data-id="${esc(t.id)}" aria-label="Удалить">✕</button></div>`).join("")}</div>`;
+        <button type="button" class="del" data-id="${esc(t.id)}" aria-label="Удалить">✕</button></div>`).join("")}</div></div>`;
   }).join("");
 }
 document.addEventListener("click",async e=>{
@@ -617,6 +691,7 @@ async function importPending(){
   try{for(const t of list){const {dup,on,...row}=t;row.createdAt=Date.now();await store.add(row);ok++;btn.textContent=`Сохраняю ${ok}/${list.length}…`}}
   catch(e){toast(`Сохранено ${ok} из ${list.length}: нет прав на запись`)}
   if(ok===list.length) toast(`Импортировано: ${ok}`);
+  if(ok)setView("ops");
   const last=list[list.length-1]; if(last){const [y,m]=last.date.split("-").map(Number);state.month=new Date(y,m-1,1)}
   pending=null;renderPreview();render();
 }
@@ -739,7 +814,7 @@ function kidsDed(n){let d=0;for(let i=1;i<=n;i++)d+=i===1?1400:i===2?2800:6000;r
 function salaryYear(gross,kids){const ded=kidsDed(kids);let ci=0,cd=0,ct=0;const rows=[];
   for(let m=0;m<12;m++){ci+=gross;if(ded&&ci<=450000)cd+=ded;const t=Math.round(ndfl(Math.max(0,ci-cd))),tax=t-ct;ct=t;rows.push({gross,tax,net:gross-tax})}return rows}
 function nf(n){return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)}
-let sal={mode:"net",amt:"",bonus:"",kids:"0",adv:"40",advDay:"25",payDay:"10",payWhen:"next",view:"ledger",tripRate:"700",tripFrom:"",tripTo:""};
+let sal={mode:"net",amt:"",bonus:"",kids:"0",adv:"40",advDay:"25",payDay:"10",payWhen:"next",view:"home",tripRate:"700",tripFrom:"",tripTo:""};
 try{const o=JSON.parse(localStorage.getItem("kopilka-salary")||"{}");delete o.year;if(o.mode&&!o.payDay)o.mode="gross";Object.assign(sal,o)}catch(e){}
 const saveSal=()=>{try{localStorage.setItem("kopilka-salary",JSON.stringify(sal))}catch(e){}};
 const num=v=>parseFloat(String(v??"").replace(/[\s ]/g,"").replace(",","."))||0;
@@ -789,15 +864,18 @@ function monthStatus(y,m){
   for(const[id,k]of Object.entries(ids)){$(id).value=sal[k];$(id).addEventListener("input",()=>{sal[k]=$(id).value;saveSal();renderSalary()})}
   $("smGross").onclick=()=>{sal.mode="gross";saveSal();renderSalary()};
   $("smNet").onclick=()=>{sal.mode="net";saveSal();renderSalary()};
-  $("vbLedger").onclick=()=>setView("ledger");$("vbSalary").onclick=()=>setView("salary");
+  for(const[k,id]of Object.entries({home:"nbHome",ops:"nbOps",salary:"nbSalary",more:"nbMore"}))$(id).onclick=()=>setView(k);
   $("cfg").open=!num(sal.amt);
   setView(sal.view);
 })();
 function setView(v){
-  sal.view=v;saveSal();
-  $("vbLedger").setAttribute("aria-pressed",v==="ledger");$("vbSalary").setAttribute("aria-pressed",v==="salary");
-  $("vLedger").hidden=v!=="ledger";$("vSalary").hidden=v!=="salary";
-  if(v==="salary")renderSalary();else renderChart();
+  if(!["home","ops","salary","more"].includes(v))v="home";
+  const changed=sal.view!==v;sal.view=v;saveSal();
+  const map={home:["vHome","nbHome"],ops:["vOps","nbOps"],salary:["vSalary","nbSalary"],more:["vMore","nbMore"]};
+  for(const[k,[view,btn]]of Object.entries(map)){$(view).hidden=k!==v;if(k===v)$(btn).setAttribute("aria-current","page");else $(btn).removeAttribute("aria-current")}
+  $("monthBar").hidden=v==="more";$("fab").hidden=v==="more";
+  if(v==="salary")renderSalary();else if(v==="home")renderChart();
+  if(changed)window.scrollTo(0,0);
 }
 function catSelect(t){return`<select data-id="${esc(t.id)}" aria-label="Категория">${CATS.inc.map(c=>`<option${c===t.cat?" selected":""}>${c}</option>`).join("")}</select>`}
 function payRow(t,extra){const d=t.date.slice(8)+"."+t.date.slice(5,7);
@@ -819,7 +897,7 @@ function renderSalary(){
     <span class="hint">${+sal.adv?`Аванс — ${st.adv.toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}, `:""}расчёт — ${st.final.toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}. Выплаты, пришедшие до ${sal.payWhen==="next"?"середины следующего месяца":"конца месяца"}, засчитываются за ${mLong.split(" ")[0].toLowerCase()}.</span>`;
   $("payCount").textContent=st.pays.length?st.pays.length+" "+plural(st.pays.length,["выплата","выплаты","выплат"]):"";
   $("payList").innerHTML=st.pays.length?st.pays.sort((a,b)=>a.date.localeCompare(b.date)).map(t=>payRow(t,t.date.slice(0,7)!==st.key?" · пришла в следующем месяце":"")).join("")
-    :`<p class="note">За этот месяц выплат пока нет. Загрузите выписку на вкладке «Учёт» или добавьте доход с категорией «Зарплата» или «Аванс».</p>`;
+    :`<p class="note">За этот месяц выплат пока нет. Загрузите выписку в разделе «Ещё» или добавьте доход кнопкой «+» с категорией «Зарплата» или «Аванс».</p>`;
   const key=y+"-"+pad(m+1),others=state.tx.filter(t=>t.type==="inc"&&!EMP_SAL.includes(t.cat)&&t.cat!=="Командировочные"&&t.date&&t.date.startsWith(key)).sort((a,b)=>a.date.localeCompare(b.date));
   applyOther(others.length);
   $("otherList").innerHTML=others.length?others.map(t=>payRow(t)).join(""):`<p class="note">Других поступлений в этом месяце нет.</p>`;
