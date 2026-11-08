@@ -309,9 +309,11 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
     </section>
 
     <section aria-label="Другие поступления" style="display:flex;flex-direction:column;gap:8px">
-      <div class="sec-head"><h2>Другие поступления</h2><span class="muted">в зарплату не входят</span></div>
+      <div class="sec-head"><h2>Другие поступления</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted">в зарплату не входят</span><button type="button" id="oToggle" aria-controls="otherBody" aria-expanded="true">Скрыть</button></div></div>
+      <div id="otherBody" style="display:flex;flex-direction:column;gap:8px">
       <p class="note">Переводы, кэшбэк и прочее. Если здесь оказалась зарплата, поменяйте категорию — она перейдёт в выплаты.</p>
       <div class="plist" id="otherList"></div>
+      </div>
     </section>
 
     <section aria-label="По месяцам" style="display:flex;flex-direction:column;gap:10px">
@@ -809,6 +811,7 @@ function renderSalary(){
   $("payList").innerHTML=st.pays.length?st.pays.sort((a,b)=>a.date.localeCompare(b.date)).map(t=>payRow(t,t.date.slice(0,7)!==st.key?" · пришла в следующем месяце":"")).join("")
     :`<p class="note">За этот месяц выплат пока нет. Загрузите выписку на вкладке «Учёт» или добавьте доход с категорией «Зарплата» или «Аванс».</p>`;
   const key=y+"-"+pad(m+1),others=state.tx.filter(t=>t.type==="inc"&&!EMP_SAL.includes(t.cat)&&t.cat!=="Командировочные"&&t.date&&t.date.startsWith(key)).sort((a,b)=>a.date.localeCompare(b.date));
+  applyOther(others.length);
   $("otherList").innerHTML=others.length?others.map(t=>payRow(t)).join(""):`<p class="note">Других поступлений в этом месяце нет.</p>`;
   document.querySelectorAll("#payList select,#otherList select").forEach(s=>s.onchange=async()=>{
     try{await store.update(s.dataset.id,{cat:s.value});toast(EMP_SAL.includes(s.value)?"Перенесено в выплаты":"Перенесено в другие поступления")}catch(e){toast("Не удалось изменить категорию")}});
@@ -822,6 +825,12 @@ function renderSalary(){
   renderTrip();
   $("cfgNote").textContent=sal.mode==="gross"&&num(sal.amt)?`Ожидаемая сумма на руки считается из оклада за вычетом НДФЛ по прогрессивной шкале (13% до 2,4 млн ₽ дохода за год, дальше 15–22%). В ${mLong.split(" ")[0].toLowerCase()}: ${fmt(expectedNet(y,m))}.`:"Если на руки каждый месяц приходит одна и та же сумма, проще указать её. Если знаете только оклад, выберите «Знаю оклад» — посчитаю НДФЛ."
 }
+
+/* ---------- collapse "other income" ---------- */
+function otherOpen(){try{return localStorage.getItem("kopilka-other")!=="0"}catch(e){return true}}
+function applyOther(n){const open=otherOpen(),b=$("oToggle");$("otherBody").hidden=!open;
+  b.textContent=open?"Скрыть":(n?`Показать (${n})`:"Показать");b.setAttribute("aria-expanded",open);
+  b.onclick=()=>{try{localStorage.setItem("kopilka-other",open?"0":"1")}catch(e){}applyOther(n)}}
 
 /* ---------- collapse journal ---------- */
 var jOpen=true;try{jOpen=localStorage.getItem("kopilka-journal")!=="0"}catch(e){}
