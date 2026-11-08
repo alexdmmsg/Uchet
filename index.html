@@ -24,7 +24,7 @@ body{margin:0}
 :root{
   --bg:#f3f5f4; --surface:#ffffff; --ink:#18211f; --muted:#5f6d69; --line:#dde3e1;
   --accent:#1f5f73; --accent-ink:#ffffff;
-  --inc:#1c7a4a; --inc-soft:#e1f2e8; --exp:#b5432f; --exp-soft:#f8e5e1;
+  --inc:#1c7a4a; --inc-soft:#e1f2e8; --c-inc:#13703f; --c-exp:#d8735e; --exp:#b5432f; --exp-soft:#f8e5e1;
   --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
   --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-num:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -32,11 +32,11 @@ body{margin:0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#111816; --surface:#19221f; --ink:#e6ecea; --muted:#93a29d; --line:#2a3633;
   --accent:#6fb8cc; --accent-ink:#0b1513;
-  --inc:#5fcf91; --inc-soft:#16322a; --exp:#ef8a74; --exp-soft:#3a1f1a; color-scheme:dark}}
+  --inc:#5fcf91; --inc-soft:#16322a; --c-inc:#15744a; --c-exp:#d9745e; --exp:#ef8a74; --exp-soft:#3a1f1a; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111816; --surface:#19221f; --ink:#e6ecea; --muted:#93a29d; --line:#2a3633;
   --accent:#6fb8cc; --accent-ink:#0b1513;
-  --inc:#5fcf91; --inc-soft:#16322a; --exp:#ef8a74; --exp-soft:#3a1f1a; color-scheme:dark}
+  --inc:#5fcf91; --inc-soft:#16322a; --c-inc:#15744a; --c-exp:#d9745e; --exp:#ef8a74; --exp-soft:#3a1f1a; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -116,6 +116,28 @@ input,select{font:inherit;color:var(--ink);background:var(--surface);border:1px 
 .pv-row .n small{display:block;color:var(--muted);overflow-wrap:anywhere}
 .pv-act{display:flex;gap:8px;flex-wrap:wrap}
 @media (max-width:520px){.pv-row{grid-template-columns:auto 1fr auto}.pv-row .d{grid-column:2/4;order:-1;font-size:.78rem;color:var(--muted)}}
+
+.trend{display:flex;flex-direction:column;gap:10px}
+.legend{display:flex;gap:16px;font-size:.82rem;color:var(--muted);flex-wrap:wrap}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.chart{position:relative;min-width:0}
+.chart svg{display:block;width:100%;overflow:visible;touch-action:pan-y}
+.chart text{font-family:var(--f-body);fill:var(--muted);font-size:11px}
+.chart .num-t{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.chart .sel text{fill:var(--ink);font-weight:600}
+.chart .hit{fill:transparent;cursor:pointer}
+.chart .col.sel .band{fill:var(--line);opacity:.55}
+.chart .col .band{fill:transparent}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem;box-shadow:0 6px 18px rgb(0 0 0 / .14);white-space:nowrap;z-index:2;display:grid;grid-template-columns:auto auto;gap:2px 12px}
+.tip b{grid-column:1/-1;text-transform:capitalize}
+.tip .num{text-align:right}
+details.mt summary{cursor:pointer;color:var(--muted);font-size:.85rem}
+details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mt-wrap{overflow-x:auto}
+.mt table{border-collapse:collapse;width:100%;font-size:.85rem;margin-top:6px}
+.mt th,.mt td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.mt th:first-child,.mt td:first-child{text-align:left;text-transform:capitalize}
+.mt th{font-weight:600;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.88rem;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -141,6 +163,15 @@ input,select{font:inherit;color:var(--ink);background:var(--surface);border:1px 
     <div><span class="label">Доходы</span><span class="num inc" id="sInc">0 ₽</span></div>
     <div><span class="label">Расходы</span><span class="num exp" id="sExp">0 ₽</span></div>
     <div class="meter" title="Доля потраченного от дохода"><i id="meter"></i></div>
+  </section>
+
+  <section class="trend" aria-label="По месяцам">
+    <div class="sec-head"><h2>По месяцам</h2>
+      <div class="tabs"><button type="button" id="r6" aria-pressed="true">6 мес</button><button type="button" id="r12" aria-pressed="false">12 мес</button></div>
+    </div>
+    <div class="legend"><span><i class="sw" style="background:var(--c-inc)"></i>Доходы</span><span><i class="sw" style="background:var(--c-exp)"></i>Расходы</span><span id="netNote">Под месяцем — остаток</span></div>
+    <div class="chart" id="chart"><div class="tip" id="tip" hidden></div></div>
+    <details class="mt"><summary>Таблица по месяцам</summary><div class="mt-wrap" id="mtable"></div></details>
   </section>
 
   <form id="form" autocomplete="off">
@@ -282,6 +313,7 @@ $("cInc").onclick=()=>{state.catView="inc";render()};
 
 /* ---------- render ---------- */
 function render(){
+  renderChart();
   const m=state.month;
   $("monthLabel").textContent=m.toLocaleDateString("ru-RU",{month:"long",year:"numeric"}).replace(" г.","");
   const key=m.getFullYear()+"-"+pad(m.getMonth()+1);
@@ -449,6 +481,61 @@ const drop=$("drop");
 drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("over")});
 drop.addEventListener("dragleave",()=>drop.classList.remove("over"));
 drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("over");const f=e.dataTransfer.files[0];if(f)readFile(f)});
+/* ---------- monthly chart ---------- */
+var range;range=6;
+try{range=+localStorage.getItem("kopilka-range")||6}catch(e){}
+const shortMoney=v=>{const a=Math.abs(v);return a>=1e6?(+(v/1e6).toFixed(1)).toLocaleString("ru-RU")+" млн":a>=1e3?(+(v/1e3).toFixed(a>=1e4?0:1)).toLocaleString("ru-RU")+" тыс":Math.round(v).toLocaleString("ru-RU")};
+function niceStep(max){const raw=max/3,p=Math.pow(10,Math.floor(Math.log10(raw||1))),n=raw/p;return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p}
+function monthsData(){
+  const now=new Date(),cur=new Date(now.getFullYear(),now.getMonth(),1);
+  const end=state.month>cur?state.month:cur;
+  const out=[];
+  for(let i=range-1;i>=0;i--){
+    const d=new Date(end.getFullYear(),end.getMonth()-i,1),k=d.getFullYear()+"-"+pad(d.getMonth()+1);
+    let inc=0,exp=0;for(const t of state.tx){if(t.date&&t.date.startsWith(k)){if(t.type==="inc")inc+=t.amount;else exp+=t.amount}}
+    out.push({d,k,inc,exp,net:inc-exp});
+  }
+  return out;
+}
+function bar(x,y,w,h){if(h<=0)return"";const r=Math.min(4,w/2,h);return`M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`}
+function renderChart(){
+  if(!range)return;const box=$("chart"),tip=$("tip");if(!box)return;
+  $("r6").setAttribute("aria-pressed",range===6);$("r12").setAttribute("aria-pressed",range===12);
+  const data=monthsData(),selK=state.month.getFullYear()+"-"+pad(state.month.getMonth()+1);
+  const W=Math.max(280,box.clientWidth||600),H=210,pl=62,pr=4,pt=8,pb=42,pw=W-pl-pr,ph=H-pt-pb;
+  const max=Math.max(1,...data.map(m=>Math.max(m.inc,m.exp))),step=niceStep(max),top=Math.ceil(max/step)*step;
+  const y=v=>pt+ph-(v/top)*ph,gw=pw/data.length,bw=Math.max(4,Math.min(22,(gw-14)/2));
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Доходы и расходы за ${range} месяцев">`;
+  for(let v=0;v<=top+1e-9;v+=step){const yy=y(v);s+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="1" ${v?'stroke-dasharray="2 4"':""}/><text x="${pl-8}" y="${yy+4}" text-anchor="end" class="num-t">${v?shortMoney(v):"0"}</text>`}
+  const narrow=gw<46;$("netNote").hidden=narrow;
+  data.forEach((m,i)=>{
+    const cx=pl+gw*i+gw/2,x0=cx-bw-1;
+    const lbl=m.d.toLocaleDateString("ru-RU",{month:"short"}).replace(".","").slice(0,narrow?3:5);
+    s+=`<g class="col${m.k===selK?" sel":""}" data-i="${i}"><rect class="band" x="${pl+gw*i+1}" y="${pt}" width="${gw-2}" height="${ph}" rx="6"/>
+      <path d="${bar(x0,y(m.inc),bw,y(0)-y(m.inc))}" fill="var(--c-inc)"/>
+      <path d="${bar(cx+1,y(m.exp),bw,y(0)-y(m.exp))}" fill="var(--c-exp)"/>
+      <text x="${cx}" y="${H-24}" text-anchor="middle">${lbl}${!narrow&&(m.d.getMonth()===0||i===0)?" "+String(m.d.getFullYear()).slice(2):""}</text>
+      ${narrow?"":`<text x="${cx}" y="${H-8}" text-anchor="middle" class="num-t">${m.inc||m.exp?(m.net>0?"+":m.net<0?"−":"")+shortMoney(Math.abs(m.net)):"—"}</text>`}
+      <rect class="hit" x="${pl+gw*i}" y="0" width="${gw}" height="${H}"/></g>`;
+  });
+  s+=`</svg>`;
+  box.querySelector("svg")?.remove();box.insertAdjacentHTML("afterbegin",s);
+  const show=(g)=>{const m=data[+g.dataset.i];
+    tip.innerHTML=`<b>${m.d.toLocaleDateString("ru-RU",{month:"long",year:"numeric"}).replace(" г.","")}</b><span>Доходы</span><span class="num">${fmt(m.inc)}</span><span>Расходы</span><span class="num">${fmt(m.exp)}</span><span>Остаток</span><span class="num">${m.net<0?"−":""}${fmt(Math.abs(m.net))}</span>`;
+    tip.hidden=false;const cx=pl+gw*(+g.dataset.i)+gw/2,tw=tip.offsetWidth;
+    tip.style.left=Math.max(0,Math.min(W-tw,cx-tw/2))+"px";tip.style.top=(pt-4)+"px";};
+  box.querySelectorAll(".col").forEach(g=>{
+    g.addEventListener("pointerenter",()=>show(g));
+    g.addEventListener("pointerleave",()=>tip.hidden=true);
+    g.addEventListener("click",()=>{state.month=new Date(data[+g.dataset.i].d);render();const ng=box.querySelector(`.col[data-i="${g.dataset.i}"]`);if(ng)show(ng)});
+  });
+  $("mtable").innerHTML=`<table><thead><tr><th>Месяц</th><th>Доходы</th><th>Расходы</th><th>Остаток</th></tr></thead><tbody>${data.slice().reverse().map(m=>`<tr><td>${m.d.toLocaleDateString("ru-RU",{month:"long",year:"numeric"}).replace(" г.","")}</td><td class="num">${fmt(m.inc)}</td><td class="num">${fmt(m.exp)}</td><td class="num">${m.net<0?"−":""}${fmt(Math.abs(m.net))}</td></tr>`).join("")}</tbody></table>`;
+}
+$("r6").onclick=()=>{range=6;try{localStorage.setItem("kopilka-range","6")}catch(e){}renderChart()};
+$("r12").onclick=()=>{range=12;try{localStorage.setItem("kopilka-range","12")}catch(e){}renderChart()};
+document.addEventListener("pointerdown",e=>{if(!e.target.closest("#chart"))$("tip").hidden=true});
+try{new ResizeObserver(()=>renderChart()).observe($("chart"))}catch(e){addEventListener("resize",renderChart)}
+
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function plural(n,f){const a=n%10,b=n%100;return f[a===1&&b!==11?0:a>=2&&a<=4&&(b<10||b>=20)?1:2]}
 let tt;function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2200)}

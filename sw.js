@@ -1,5 +1,5 @@
 // Копилка: офлайн-кэш. При изменении файлов увеличьте номер версии.
-const CACHE = "kopilka-v1";
+const CACHE = "kopilka-v2";
 const CORE = ["./", "index.html", "manifest.webmanifest", "xlsx.full.min.js",
   "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
