@@ -165,6 +165,31 @@ details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:
 .sal-table tr.cur td{font-weight:600;background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .sal-table tfoot td{font-weight:600;border-bottom:0}
 .note{font-size:.8rem;color:var(--muted);line-height:1.5;margin:0}
+
+.pay-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.pay-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pay-nums>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pay-nums .num{font-size:1.15rem;overflow-wrap:anywhere}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;padding:4px 10px;border-radius:999px;align-self:flex-start}
+.pill.ok{background:var(--inc-soft);color:var(--inc)}
+.pill.none{background:var(--line);color:var(--muted)}
+.pill.wait{background:var(--line);color:var(--ink)}
+.pill.bad{background:var(--exp-soft);color:var(--exp)}
+.prog{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--inc);border-radius:4px}
+.plist{display:flex;flex-direction:column}
+.prow{display:grid;grid-template-columns:3.2em 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.prow .n{min-width:0}
+.prow .n small{display:block;color:var(--muted);overflow-wrap:anywhere}
+.prow select{padding:3px 6px;font-size:.85rem;width:auto;max-width:100%}
+.prow .d{color:var(--muted);font-size:.8rem}
+.st{font-size:.8rem;white-space:nowrap}
+.st.ok{color:var(--inc)} .st.bad{color:var(--exp)} .st.wait{color:var(--muted)}
+details.cfg{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+details.cfg summary{cursor:pointer;font-weight:600}
+details.cfg[open] summary{margin-bottom:12px}
+details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){.pay-nums{grid-template-columns:1fr 1fr}.pay-nums>div:first-child{grid-column:1/-1}}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.88rem;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -250,25 +275,41 @@ details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:
   </div>
 
   <div class="view" id="vSalary" hidden>
-    <section class="sal-form" aria-label="Данные о зарплате">
-      <div class="seg wide" role="group" aria-label="Что известно">
-        <button type="button" class="i" id="smGross" aria-pressed="true">Знаю оклад</button>
-        <button type="button" class="i" id="smNet" aria-pressed="false">Знаю «на руки»</button>
-      </div>
-      <label class="field wide"><span class="label" id="salAmtLabel">Оклад до вычета НДФЛ, ₽ в месяц</span><input id="salAmt" inputmode="decimal" placeholder="Например, 100 000"></label>
-      <label class="field"><span class="label">Надбавки, %</span><input id="salBonus" inputmode="decimal" placeholder="0"><span class="hint">Районный коэффициент, северные, постоянная премия</span></label>
-      <label class="field"><span class="label">Детей</span><select id="salKids"><option value="0">Нет</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select><span class="hint">Стандартный вычет на детей</span></label>
-      <label class="field"><span class="label">Аванс, %</span><select id="salAdv"><option value="40">40%</option><option value="50">50%</option><option value="0">Без аванса</option></select></label>
-      <label class="field"><span class="label">Год</span><select id="salYear"></select></label>
+    <section class="pay-card" aria-label="Выплаты за месяц" id="payCard"></section>
+
+    <section aria-label="Выплаты от работодателя" style="display:flex;flex-direction:column;gap:8px">
+      <div class="sec-head"><h2>Выплаты от работодателя</h2><span class="muted" id="payCount"></span></div>
+      <div class="plist" id="payList"></div>
     </section>
 
-    <section class="sal-hero" aria-label="Итог" id="salHero"></section>
+    <section aria-label="Другие поступления" style="display:flex;flex-direction:column;gap:8px">
+      <div class="sec-head"><h2>Другие поступления</h2><span class="muted">в зарплату не входят</span></div>
+      <p class="note">Переводы, кэшбэк, командировочные. Если здесь оказалась зарплата, поменяйте категорию — она перейдёт в выплаты.</p>
+      <div class="plist" id="otherList"></div>
+    </section>
 
     <section aria-label="По месяцам" style="display:flex;flex-direction:column;gap:10px">
-      <div class="sec-head"><h2>Помесячно за год, ₽</h2><span class="muted" id="salYearNote"></span></div>
+      <div class="sec-head"><h2>Сверка за год, ₽</h2><span class="muted" id="salYearNote"></span></div>
       <div class="sal-table" id="salTable"></div>
-      <p class="note">НДФЛ считается нарастающим итогом с начала года по прогрессивной шкале: 13% с дохода до 2,4 млн ₽ за год, 15% — с части от 2,4 до 5 млн, 18% — от 5 до 20 млн, 20% — от 20 до 50 млн, 22% — свыше 50 млн. Вычет на детей: 1 400 ₽ на первого, 2 800 ₽ на второго, 6 000 ₽ на третьего и каждого следующего, пока доход с начала года не превысит 450 000 ₽. Расчёт для обычного трудового договора, без больничных, отпускных и разовых премий. Точная сумма — в расчётном листке.</p>
     </section>
+
+    <details class="cfg" id="cfg">
+      <summary>Условия зарплаты</summary>
+      <div class="sal-form">
+        <div class="seg wide" role="group" aria-label="Что известно">
+          <button type="button" class="i" id="smNet" aria-pressed="true">Знаю «на руки»</button>
+          <button type="button" class="i" id="smGross" aria-pressed="false">Знаю оклад</button>
+        </div>
+        <label class="field wide"><span class="label" id="salAmtLabel">На руки за месяц, ₽</span><input id="salAmt" inputmode="decimal" placeholder="Например, 87 000"></label>
+        <label class="field" id="fBonus"><span class="label">Надбавки, %</span><input id="salBonus" inputmode="decimal" placeholder="0"><span class="hint">Районный коэффициент, постоянная премия</span></label>
+        <label class="field" id="fKids"><span class="label">Детей</span><select id="salKids"><option value="0">Нет</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select><span class="hint">Вычет по НДФЛ</span></label>
+        <label class="field"><span class="label">Аванс</span><select id="salAdv"><option value="40">40% от суммы</option><option value="50">50% от суммы</option><option value="0">Без аванса</option></select></label>
+        <label class="field"><span class="label">Аванс приходит</span><select id="salAdvDay"></select></label>
+        <label class="field"><span class="label">Расчёт за месяц</span><select id="salPayDay"></select></label>
+        <label class="field"><span class="label">Приходит</span><select id="salPayWhen"><option value="next">в следующем месяце</option><option value="same">в том же месяце</option></select></label>
+      </div>
+      <p class="note" style="margin-top:12px" id="cfgNote"></p>
+    </details>
   </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -277,7 +318,7 @@ details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:
 <script>
 const CATS={
   exp:["Продукты","Кафе и рестораны","Транспорт","Жильё и ЖКХ","Связь и интернет","Здоровье","Одежда","Покупки","Развлечения","Подписки","Подарки","Переводы","Другое"],
-  inc:["Зарплата","Подработка","Командировочные","Кэшбэк и проценты","Переводы","Возврат покупки","Возврат долга","Подарки","Другое"]
+  inc:["Зарплата","Аванс","Премия","Отпускные","Больничный","Командировочные","Подработка","Кэшбэк и проценты","Переводы","Возврат покупки","Возврат долга","Подарки","Другое"]
 };
 const $=id=>document.getElementById(id);
 const fmt=n=>new Intl.NumberFormat("ru-RU",{maximumFractionDigits:2}).format(n)+" ₽";
@@ -294,7 +335,8 @@ const save=()=>{try{localStorage.setItem(LS_KEY,JSON.stringify(list))}catch(e){t
 const emit=()=>{state.tx=list.slice();state.loaded=true;render()};
 store={mode:"local",
   add:async t=>{list.push({...t,id:Date.now().toString(36)+Math.random().toString(36).slice(2,7)});save();emit()},
-  remove:async id=>{list=list.filter(t=>t.id!==id);save();emit()}};
+  remove:async id=>{list=list.filter(t=>t.id!==id);save();emit()},
+  update:async(id,patch)=>{list=list.map(t=>t.id===id?{...t,...patch}:t);save();emit()}};
 try{navigator.storage?.persist?.()}catch(e){}
 emit();
 $("mode").textContent="Данные хранятся на этом телефоне";
@@ -373,7 +415,7 @@ $("cInc").onclick=()=>{state.catView="inc";render()};
 
 /* ---------- render ---------- */
 function render(){
-  renderChart();
+  renderChart();renderSalary();
   const m=state.month;
   $("monthLabel").textContent=m.toLocaleDateString("ru-RU",{month:"long",year:"numeric"}).replace(" г.","");
   const key=m.getFullYear()+"-"+pad(m.getMonth()+1);
@@ -459,8 +501,12 @@ function guess(type,desc){
     if(!cat&&mcc) for(const[re,c]of MCC_CAT) if(re.test(mcc)){cat=c;break}
     if(!cat&&/перевод/i.test(desc)) cat="Переводы";
   }else{
-    if(/зарплат|заработн/i.test(desc)) cat="Зарплата";
-    else if(/командировоч|подотчет|подотчёт/i.test(desc)){cat="Командировочные";note="Командировочные, подотчёт"}
+    if(/командировоч|подотчет|подотчёт/i.test(desc)){cat="Командировочные";note="Командировочные, подотчёт"}
+    else if(/отпускн/i.test(desc)){cat="Отпускные";note="Отпускные"}
+    else if(/больничн|нетрудоспособ/i.test(desc)){cat="Больничный";note="Больничный"}
+    else if(/преми/i.test(desc)){cat="Премия";note="Премия"}
+    else if(/аванс/i.test(desc)){cat="Аванс";note="Аванс"}
+    else if(/зарплат|заработн|оплата труда|оплаты труда/i.test(desc)){cat="Зарплата";note="Зарплата"}
     else if(/кэшбэк|cashback|процент/i.test(desc)) cat="Кэшбэк и проценты";
     else if(/возврат/i.test(desc)) cat="Возврат покупки";
     else if(/перевод/i.test(desc)) cat="Переводы";
@@ -596,72 +642,107 @@ $("r12").onclick=()=>{range=12;try{localStorage.setItem("kopilka-range","12")}ca
 document.addEventListener("pointerdown",e=>{if(!e.target.closest("#chart"))$("tip").hidden=true});
 try{new ResizeObserver(()=>renderChart()).observe($("chart"))}catch(e){addEventListener("resize",renderChart)}
 
-/* ---------- salary ---------- */
+/* ---------- salary: payments from employer ---------- */
+const EMP_SAL=["Зарплата","Аванс","Премия","Отпускные","Больничный"];
 const BRACKETS=[[2.4e6,.13],[5e6,.15],[2e7,.18],[5e7,.20],[Infinity,.22]];
 function ndfl(base){let tax=0,prev=0;for(const[lim,r]of BRACKETS){if(base<=prev)break;tax+=(Math.min(base,lim)-prev)*r;prev=lim}return tax}
-function rateAt(base){let prev=0;for(const[lim,r]of BRACKETS){if(base<=lim)return r;prev=lim}return .22}
 function kidsDed(n){let d=0;for(let i=1;i<=n;i++)d+=i===1?1400:i===2?2800:6000;return d}
-function salaryYear(gross,kids){
-  const ded=kidsDed(kids);let cumIncome=0,cumDed=0,cumTax=0;const rows=[];
-  for(let m=0;m<12;m++){
-    cumIncome+=gross; if(ded&&cumIncome<=450000)cumDed+=ded;
-    const base=Math.max(0,cumIncome-cumDed),t=Math.round(ndfl(base)),tax=t-cumTax;cumTax=t;
-    rows.push({m,gross,tax,net:gross-tax,rate:rateAt(base)});
-  }
-  return rows;
-}
-function grossFromNet(net,kids){ // по январю: ставка 13%, вычет действует
-  const ded=kidsDed(kids);let g=(net-.13*ded)/.87;
-  for(let i=0;i<30;i++){const r=salaryYear(g,kids)[0];g+=net-r.net}
-  return Math.max(0,Math.round(g*100)/100);
-}
-let sal={mode:"gross",amt:"",bonus:"",kids:"0",adv:"40",year:String(new Date().getFullYear()),view:"ledger"};
-try{Object.assign(sal,JSON.parse(localStorage.getItem("kopilka-salary")||"{}"))}catch(e){}
+function salaryYear(gross,kids){const ded=kidsDed(kids);let ci=0,cd=0,ct=0;const rows=[];
+  for(let m=0;m<12;m++){ci+=gross;if(ded&&ci<=450000)cd+=ded;const t=Math.round(ndfl(Math.max(0,ci-cd))),tax=t-ct;ct=t;rows.push({gross,tax,net:gross-tax})}return rows}
+function nf(n){return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)}
+let sal={mode:"net",amt:"",bonus:"",kids:"0",adv:"40",advDay:"25",payDay:"10",payWhen:"next",view:"ledger"};
+try{const o=JSON.parse(localStorage.getItem("kopilka-salary")||"{}");delete o.year;if(o.mode&&!o.payDay)o.mode="gross";Object.assign(sal,o)}catch(e){}
 const saveSal=()=>{try{localStorage.setItem("kopilka-salary",JSON.stringify(sal))}catch(e){}};
+const num=v=>parseFloat(String(v??"").replace(/[\s ]/g,"").replace(",","."))||0;
+function expectedNet(y,m){ // m 0..11
+  const amt=num(sal.amt);if(!amt)return 0;
+  if(sal.mode==="net")return amt;
+  return salaryYear(amt*(1+num(sal.bonus)/100),+sal.kids||0)[m].net;
+}
+// К какому рабочему месяцу относится выплата
+function workKey(t){
+  const [y,mo,d]=t.date.split("-").map(Number);
+  if(sal.payWhen==="same")return t.date.slice(0,7);
+  const adv=+sal.adv,advDay=+sal.advDay,payDay=+sal.payDay;
+  const cut=adv?Math.round((payDay+advDay)/2):Math.min(28,payDay+12);
+  if(d>=cut)return t.date.slice(0,7);
+  const p=new Date(y,mo-2,1);return p.getFullYear()+"-"+pad(p.getMonth()+1);
+}
+const lastDay=(y,m)=>new Date(y,m+1,0).getDate();
+function dueDates(y,m){
+  const adv=+sal.adv?new Date(y,m,Math.min(+sal.advDay,lastDay(y,m))):null;
+  const fm=sal.payWhen==="same"?m:m+1,fy=y+Math.floor(fm/12),fmm=fm%12;
+  return{adv,final:new Date(fy,fmm,Math.min(+sal.payDay,lastDay(fy,fmm)))};
+}
+function monthStatus(y,m){
+  const key=y+"-"+pad(m+1),now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const pays=state.tx.filter(t=>t.type==="inc"&&EMP_SAL.includes(t.cat)&&t.date&&workKey(t)===key);
+  const got=pays.reduce((s,t)=>s+t.amount,0),exp=expectedNet(y,m),{adv,final}=dueDates(y,m);
+  const dd=d=>d.toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+  const grace=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+3);
+  let cls,text;const first=state.tx.reduce((a,t)=>t.date&&t.date<a?t.date:a,"9999").slice(0,7);
+  if(new Date(y,m,1)>today){cls="wait";text="Месяц ещё не начался"}
+  else if(key<first&&!got){cls="none";text="Нет данных: выписка за этот месяц не загружена"}
+  else if(!exp){cls="wait";text=got?"Укажите сумму в «Условиях зарплаты», чтобы сверить":"Нет выплат и не задана сумма"}
+  else if(got>=exp-1){cls="ok";text=got>exp+1?`✓ Выплачено, сверх ожидаемого +${fmt(got-exp)}`:"✓ Выплачено полностью"}
+  else if(today<=grace(final)){
+    if(adv&&!got&&today>grace(adv)){cls="bad";text=`! Аванс не пришёл (ждали ${dd(adv)})`}
+    else if(adv&&!got){cls="wait";text=`Ждём аванс ${dd(adv)}`}
+    else{cls="wait";text=`Ждём расчёт ${dd(final)}: ${fmt(exp-got)}`}
+  }
+  else{cls="bad";text=`✕ Недоплата ${fmt(exp-got)}`}
+  return{key,pays,got,exp,cls,text,adv,final};
+}
 (function initSalary(){
-  const y=new Date().getFullYear();$("salYear").innerHTML=[y-1,y,y+1].map(v=>`<option>${v}</option>`).join("");
-  $("salAmt").value=sal.amt;$("salBonus").value=sal.bonus;$("salKids").value=sal.kids;$("salAdv").value=sal.adv;$("salYear").value=sal.year;
-  for(const id of["salAmt","salBonus","salKids","salAdv","salYear"])$(id).addEventListener("input",()=>{sal.amt=$("salAmt").value;sal.bonus=$("salBonus").value;sal.kids=$("salKids").value;sal.adv=$("salAdv").value;sal.year=$("salYear").value;saveSal();renderSalary()});
+  const days=Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}-го числа</option>`).join("");
+  $("salAdvDay").innerHTML=days;$("salPayDay").innerHTML=days;
+  const ids={salAmt:"amt",salBonus:"bonus",salKids:"kids",salAdv:"adv",salAdvDay:"advDay",salPayDay:"payDay",salPayWhen:"payWhen"};
+  for(const[id,k]of Object.entries(ids)){$(id).value=sal[k];$(id).addEventListener("input",()=>{sal[k]=$(id).value;saveSal();renderSalary()})}
   $("smGross").onclick=()=>{sal.mode="gross";saveSal();renderSalary()};
   $("smNet").onclick=()=>{sal.mode="net";saveSal();renderSalary()};
   $("vbLedger").onclick=()=>setView("ledger");$("vbSalary").onclick=()=>setView("salary");
+  $("cfg").open=!num(sal.amt);
   setView(sal.view);
 })();
 function setView(v){
   sal.view=v;saveSal();
   $("vbLedger").setAttribute("aria-pressed",v==="ledger");$("vbSalary").setAttribute("aria-pressed",v==="salary");
   $("vLedger").hidden=v!=="ledger";$("vSalary").hidden=v!=="salary";
-  document.querySelector(".month").hidden=v!=="ledger";
   if(v==="salary")renderSalary();else renderChart();
 }
-function nf(n){return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)}
+function catSelect(t){return`<select data-id="${esc(t.id)}" aria-label="Категория">${CATS.inc.map(c=>`<option${c===t.cat?" selected":""}>${c}</option>`).join("")}</select>`}
+function payRow(t,extra){const d=t.date.slice(8)+"."+t.date.slice(5,7);
+  return`<div class="prow"><span class="d num">${d}</span><div class="n">${catSelect(t)}<small>${esc(t.note||"")}${extra||""}</small></div><span class="num" style="color:var(--inc)">+${fmt(t.amount)}</span></div>`}
 function renderSalary(){
+  if(!$("vSalary")||$("vSalary").hidden)return;
   $("smGross").setAttribute("aria-pressed",sal.mode==="gross");$("smNet").setAttribute("aria-pressed",sal.mode==="net");
-  $("salAmtLabel").textContent=sal.mode==="gross"?"Оклад до вычета НДФЛ, ₽ в месяц":"Хочу получать на руки, ₽ в месяц";
-  const amt=parseFloat(String(sal.amt).replace(/[\s ]/g,"").replace(",","."))||0;
-  const bonus=Math.max(0,parseFloat(String(sal.bonus).replace(",","."))||0);
-  const kids=+sal.kids||0,adv=+sal.adv||0,year=+sal.year;
-  const now=new Date(),curM=year===now.getFullYear()?now.getMonth():year<now.getFullYear()?11:0;
-  if(!amt){
-    $("salHero").innerHTML=`<div style="grid-column:1/-1"><b>Введите ${sal.mode==="gross"?"оклад":"желаемую сумму на руки"}</b><span class="muted">Посчитаю, сколько придёт на карту в каждом месяце, сколько уйдёт в НДФЛ, и как разделятся аванс и вторая часть.</span></div>`;
-    $("salTable").innerHTML="";$("salYearNote").textContent="";return;
-  }
-  let gross;
-  if(sal.mode==="gross")gross=amt*(1+bonus/100);
-  else gross=grossFromNet(amt,kids);
-  const rows=salaryYear(gross,kids),cur=rows[curM];
-  const tot=rows.reduce((a,r)=>({g:a.g+r.gross,t:a.t+r.tax,n:a.n+r.net}),{g:0,t:0,n:0});
-  const mName=m=>new Date(year,m,1).toLocaleDateString("ru-RU",{month:"long"});
-  const advSum=Math.round(gross*adv/100),rest=cur.net-advSum;
-  const baseOklad=sal.mode==="net"?gross/(1+bonus/100):amt;
-  $("salHero").innerHTML=`<div><span class="label">На руки · ${mName(curM)}</span><span class="num big">${fmt(cur.net)}</span></div>
-    <div><span class="label">${sal.mode==="net"?"Нужен оклад":"Начислено"}</span><span class="num">${fmt(sal.mode==="net"?Math.ceil(baseOklad):gross)}</span>${sal.mode==="net"&&bonus?`<span class="hint">С надбавками: ${fmt(Math.round(gross))}</span>`:""}</div>
-    <div><span class="label">НДФЛ</span><span class="num">${fmt(cur.tax)}</span><span class="hint">ставка ${Math.round(cur.rate*100)}%</span></div>
-    <div class="split">${adv?`<span>Аванс ≈ <b class="num">${fmt(advSum)}</b></span><span>Вторая часть ≈ <b class="num">${fmt(rest)}</b></span>`:`<span>Выплата раз в месяц: <b class="num">${fmt(cur.net)}</b></span>`}<span class="muted">За год на руки: <b class="num">${fmt(tot.n)}</b></span></div>`;
-  const first=rows.findIndex(r=>r.rate>.13);
-  $("salYearNote").textContent=first>=0?`с ${new Date(year,first,1).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}).replace(/^\d+\s*/,"")} ставка выше 13%`:"весь год по 13%";
-  $("salTable").innerHTML=`<table><thead><tr><th>Месяц</th><th>Начислено</th><th>НДФЛ</th><th>На руки</th><th>%</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.m===curM?"cur":""}"><td>${mName(r.m)}</td><td class="num">${nf(r.gross)}</td><td class="num">${nf(r.tax)}</td><td class="num">${nf(r.net)}</td><td><span class="rate${r.rate>.13?" up":""}">${Math.round(r.rate*100)}</span></td></tr>`).join("")}</tbody>
-    <tfoot><tr><td style="text-transform:none">За год</td><td class="num">${nf(tot.g)}</td><td class="num">${nf(tot.t)}</td><td class="num">${nf(tot.n)}</td><td></td></tr></tfoot></table>`;
+  $("salAmtLabel").textContent=sal.mode==="gross"?"Оклад до вычета НДФЛ, ₽ в месяц":"На руки за месяц, ₽";
+  $("fBonus").hidden=$("fKids").hidden=sal.mode!=="gross";
+  const y=state.month.getFullYear(),m=state.month.getMonth(),st=monthStatus(y,m);
+  const mLong=new Date(y,m,1).toLocaleDateString("ru-RU",{month:"long",year:"numeric"}).replace(" г.","");
+  const left=Math.max(0,st.exp-st.got);
+  $("payCard").innerHTML=`<div class="sec-head"><h2 style="text-transform:none">Зарплата за ${mLong.replace(/^./,c=>c.toLowerCase())}</h2></div>
+    <span class="pill ${st.cls}">${st.text}</span>
+    <div class="pay-nums"><div><span class="label">Получено</span><span class="num" style="color:var(--inc)">${fmt(st.got)}</span></div>
+    <div><span class="label">Должны были</span><span class="num">${st.exp?fmt(st.exp):"—"}</span></div>
+    <div><span class="label">${st.cls==="bad"?"Недоплата":"Осталось получить"}</span><span class="num" style="color:${st.cls==="bad"&&left?"var(--exp)":"var(--ink)"}">${st.exp?fmt(left):"—"}</span></div></div>
+    ${st.exp?`<div class="prog" title="Получено от ожидаемого"><i style="width:${Math.min(100,st.got/st.exp*100)}%"></i></div>`:""}
+    <span class="hint">${+sal.adv?`Аванс — ${st.adv.toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}, `:""}расчёт — ${st.final.toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}. Выплаты, пришедшие до ${sal.payWhen==="next"?"середины следующего месяца":"конца месяца"}, засчитываются за ${mLong.split(" ")[0].toLowerCase()}.</span>`;
+  $("payCount").textContent=st.pays.length?st.pays.length+" "+plural(st.pays.length,["выплата","выплаты","выплат"]):"";
+  $("payList").innerHTML=st.pays.length?st.pays.sort((a,b)=>a.date.localeCompare(b.date)).map(t=>payRow(t,t.date.slice(0,7)!==st.key?" · пришла в следующем месяце":"")).join("")
+    :`<p class="note">За этот месяц выплат пока нет. Загрузите выписку на вкладке «Учёт» или добавьте доход с категорией «Зарплата» или «Аванс».</p>`;
+  const key=y+"-"+pad(m+1),others=state.tx.filter(t=>t.type==="inc"&&!EMP_SAL.includes(t.cat)&&t.date&&t.date.startsWith(key)).sort((a,b)=>a.date.localeCompare(b.date));
+  $("otherList").innerHTML=others.length?others.map(t=>payRow(t)).join(""):`<p class="note">Других поступлений в этом месяце нет.</p>`;
+  document.querySelectorAll("#payList select,#otherList select").forEach(s=>s.onchange=async()=>{
+    try{await store.update(s.dataset.id,{cat:s.value});toast(EMP_SAL.includes(s.value)?"Перенесено в выплаты":"Перенесено в другие поступления")}catch(e){toast("Не удалось изменить категорию")}});
+  // year table
+  const rows=[];for(let i=0;i<12;i++)rows.push({i,...monthStatus(y,i)});
+  const vis=rows.filter(r=>r.got||(r.cls!=="none"&&new Date(y,r.i,1)<=new Date()));
+  const debt=rows.filter(r=>r.cls==="bad").reduce((s,r)=>s+Math.max(0,r.exp-r.got),0);
+  $("salYearNote").textContent=debt?`недоплачено за ${y}: ${fmt(debt)}`:"";
+  $("salTable").innerHTML=vis.length?`<table><thead><tr><th>Месяц</th><th>Ожидалось</th><th>Получено</th><th>Итог</th></tr></thead><tbody>${vis.reverse().map(r=>`<tr class="${r.i===m?"cur":""}" data-m="${r.i}" style="cursor:pointer"><td>${new Date(y,r.i,1).toLocaleDateString("ru-RU",{month:"long"})}</td><td class="num">${r.exp?nf(r.exp):"—"}</td><td class="num">${nf(r.got)}</td><td><span class="st ${r.cls}">${r.cls==="ok"?"✓ полностью":r.cls==="bad"?"✕ −"+nf(r.exp-r.got):r.exp?"ждём":"—"}</span></td></tr>`).join("")}</tbody></table>`:"";
+  document.querySelectorAll("#salTable tr[data-m]").forEach(tr=>tr.onclick=()=>{state.month=new Date(y,+tr.dataset.m,1);render()});
+  $("cfgNote").textContent=sal.mode==="gross"&&num(sal.amt)?`Ожидаемая сумма на руки считается из оклада за вычетом НДФЛ по прогрессивной шкале (13% до 2,4 млн ₽ дохода за год, дальше 15–22%). В ${mLong.split(" ")[0].toLowerCase()}: ${fmt(expectedNet(y,m))}.`:"Если на руки каждый месяц приходит одна и та же сумма, проще указать её. Если знаете только оклад, выберите «Знаю оклад» — посчитаю НДФЛ."
 }
 
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
