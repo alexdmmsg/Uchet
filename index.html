@@ -201,6 +201,10 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
 .trow .st{grid-column:2;text-align:right}
 .trip-cfg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:start}
 @media (max-width:520px){.trip-cfg{grid-template-columns:1fr 1fr}.trip-cfg .f-rate{grid-column:1/-1}}
+.danger{color:var(--exp);border-color:color-mix(in srgb,var(--exp) 40%,var(--line))}
+.danger-fill{background:var(--exp);border-color:var(--exp);color:#fff;font-weight:600}
+.confirm-box{display:flex;flex-direction:column;gap:8px;padding:14px 16px;margin-top:10px;border:1px solid var(--exp);border-radius:12px;background:var(--exp-soft)}
+.confirm-box b{font-size:1.05rem}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.88rem;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -280,7 +284,12 @@ details.cfg summary:focus-visible{outline:2px solid var(--accent);outline-offset
   </section>
 
   <section aria-label="Журнал операций">
-    <div class="sec-head"><h2>Операции</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted" id="count"></span><button type="button" id="jToggle" aria-controls="journal" aria-expanded="true">Свернуть</button></div></div>
+    <div class="sec-head"><h2>Операции</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted" id="count"></span><button type="button" id="jToggle" aria-controls="journal" aria-expanded="true">Свернуть</button><button type="button" class="danger" id="delAll">Удалить все</button></div></div>
+    <div class="confirm-box" id="delBox" role="alertdialog" aria-labelledby="delQ" hidden>
+      <b id="delQ">Вы уверены?</b>
+      <span class="muted" id="delText"></span>
+      <div class="pv-act"><button type="button" class="danger-fill" id="delYes">Да, удалить все</button><button type="button" id="delMonth"></button><button type="button" id="delNo">Отмена</button></div>
+    </div>
     <div id="journal"></div>
   </section>
   </div>
@@ -364,7 +373,8 @@ const emit=()=>{state.tx=list.slice();state.loaded=true;render()};
 store={mode:"local",
   add:async t=>{list.push({...t,id:Date.now().toString(36)+Math.random().toString(36).slice(2,7)});save();emit()},
   remove:async id=>{list=list.filter(t=>t.id!==id);save();emit()},
-  update:async(id,patch)=>{list=list.map(t=>t.id===id?{...t,...patch}:t);save();emit()}};
+  update:async(id,patch)=>{list=list.map(t=>t.id===id?{...t,...patch}:t);save();emit()},
+  removeMany:async ids=>{const set=new Set(ids);list=list.filter(t=>!set.has(t.id));save();emit()}};
 try{navigator.storage?.persist?.()}catch(e){}
 emit();
 $("mode").textContent="Данные хранятся на этом телефоне";
@@ -831,6 +841,27 @@ function otherOpen(){try{return localStorage.getItem("kopilka-other")!=="0"}catc
 function applyOther(n){const open=otherOpen(),b=$("oToggle");$("otherBody").hidden=!open;
   b.textContent=open?"Скрыть":(n?`Показать (${n})`:"Показать");b.setAttribute("aria-expanded",open);
   b.onclick=()=>{try{localStorage.setItem("kopilka-other",open?"0":"1")}catch(e){}applyOther(n)}}
+
+/* ---------- delete all ---------- */
+function monthRows(){const k=state.month.getFullYear()+"-"+pad(state.month.getMonth()+1);return state.tx.filter(t=>t.date&&t.date.startsWith(k))}
+$("delAll").onclick=()=>{
+  const all=state.tx.length,mon=monthRows().length;
+  if(!all){toast("Удалять нечего");return}
+  const mName=state.month.toLocaleDateString("ru-RU",{month:"long"});
+  $("delText").textContent=`Будут удалены все ${all} ${plural(all,["запись","записи","записей"])} за все месяцы. Отменить это нельзя.`+($("bkSave")?" Перед удалением можно сохранить резервную копию.":"");
+  $("delYes").textContent=`Да, удалить все (${all})`;
+  $("delMonth").hidden=!mon||mon===all;$("delMonth").textContent=`Только за ${mName} (${mon})`;
+  $("delBox").hidden=false;$("delNo").focus();
+};
+$("delNo").onclick=()=>{$("delBox").hidden=true};
+async function doDelete(ids,btn){
+  btn.disabled=true;
+  try{await store.removeMany(ids);toast(`Удалено записей: ${ids.length}`)}catch(e){toast("Не удалось удалить: нет прав на запись")}
+  btn.disabled=false;$("delBox").hidden=true;
+}
+$("delYes").onclick=()=>doDelete(state.tx.map(t=>t.id),$("delYes"));
+$("delMonth").onclick=()=>doDelete(monthRows().map(t=>t.id),$("delMonth"));
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("delBox").hidden)$("delBox").hidden=true});
 
 /* ---------- collapse journal ---------- */
 var jOpen=true;try{jOpen=localStorage.getItem("kopilka-journal")!=="0"}catch(e){}
