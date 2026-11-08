@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Копилка</title>
+<title>Где деньги?</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#f3f5f4" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111816" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Копилка">
+<meta name="apple-mobile-web-app-title" content="Где деньги?">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
@@ -47,6 +47,8 @@ h2{font-size:.95rem;font-weight:500}
 .num{font-family:var(--f-num);font-variant-numeric:tabular-nums;font-weight:500}
 .muted{color:var(--muted)}
 .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.cat{width:56px;height:56px;border-radius:14px;object-fit:cover;flex:none;box-shadow:0 0 0 1px var(--line)}
 header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
 .month{display:flex;align-items:center;gap:6px}
 .month span{min-width:9.5em;text-align:center;font-weight:600;text-transform:capitalize}
@@ -147,9 +149,12 @@ details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:
 <body>
 <div class="wrap">
   <header>
-    <div style="display:flex;flex-direction:column;gap:4px">
-      <h1>Копилка</h1>
+    <div class="brand">
+      <img class="cat" src="cat.jpg" alt="Котик с пустым кошельком" width="56" height="56">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+      <h1>Где деньги?</h1>
       <span class="mode" id="mode">Данные хранятся на этом телефоне</span>
+      </div>
     </div>
     <div class="month">
       <button class="icon" id="prev" aria-label="Предыдущий месяц">‹</button>
@@ -242,7 +247,7 @@ $("mode").textContent="Данные хранятся на этом телефо�
 /* ---------- backup ---------- */
 $("bkSave").onclick=()=>{
   const blob=new Blob([JSON.stringify({app:"kopilka",version:1,exported:new Date().toISOString(),tx:list},null,1)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="kopilka-"+iso(new Date())+".json";
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gde-dengi-"+iso(new Date())+".json";
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   try{localStorage.setItem("kopilka-backup",iso(new Date()))}catch(e){}
   bkInfo();toast("Копия сохранена в «Загрузки»");
@@ -255,7 +260,7 @@ $("bkFile").onchange=async e=>{
     const ids=new Set(list.map(t=>t.id));let n=0;
     for(const t of rows){if(t&&t.kind==="tx"&&t.id&&!ids.has(t.id)&&t.amount>0&&t.date){list.push(t);ids.add(t.id);n++}}
     save();emit();toast(n?`Восстановлено записей: ${n}`:"Новых записей в копии нет");
-  }catch(err){toast("Это не файл копии Копилки")}
+  }catch(err){toast("Это не файл резервной копии")}
 };
 function bkInfo(){let d=null;try{d=localStorage.getItem("kopilka-backup")}catch(e){}
   $("bkInfo").textContent=d?"Последняя копия: "+new Date(d+"T12:00").toLocaleDateString("ru-RU",{day:"numeric",month:"long"}):"Копий ещё не было. Сохраняйте копию раз в месяц: если удалить приложение, записи пропадут."}
@@ -454,7 +459,7 @@ function renderPreview(){
   const sum=ty=>on.filter(t=>t.type===ty).reduce((s,t)=>s+t.amount,0);
   p.hidden=false;
   p.innerHTML=`<div class="sec-head"><h2>${esc(pending.name)}</h2><span class="muted">${pending.items.length} ${plural(pending.items.length,["операция","операции","операций"])}</span></div>
-    <div class="pv-sum"><span>К импорту: <b class="num">${on.length}</b></span><span style="color:var(--inc)" class="num">+${fmt(sum("inc"))}</span><span style="color:var(--exp)" class="num">−${fmt(sum("exp"))}</span>${dups?`<span class="muted">Уже есть в Копилке: ${dups}</span>`:""}</div>
+    <div class="pv-sum"><span>К импорту: <b class="num">${on.length}</b></span><span style="color:var(--inc)" class="num">+${fmt(sum("inc"))}</span><span style="color:var(--exp)" class="num">−${fmt(sum("exp"))}</span>${dups?`<span class="muted">Уже есть в приложении: ${dups}</span>`:""}</div>
     <div class="pv-list">${pending.items.map((t,i)=>`<div class="pv-row${t.dup?" dup":""}">
       <input type="checkbox" id="pv${i}" data-i="${i}" ${t.on?"checked":""} ${t.dup?"disabled":""} aria-label="Импортировать" style="width:auto">
       <span class="d num">${t.date.slice(8)}.${t.date.slice(5,7)}</span>

@@ -1,7 +1,7 @@
-// Копилка: офлайн-кэш. При изменении файлов увеличьте номер версии.
-const CACHE = "kopilka-v2";
+// Где деньги?: офлайн-кэш. При изменении файлов увеличьте номер версии.
+const CACHE = "kopilka-v3";
 const CORE = ["./", "index.html", "manifest.webmanifest", "xlsx.full.min.js",
-  "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
+  "icon-192.png", "icon-512.png", "apple-touch-icon.png", "cat.jpg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
