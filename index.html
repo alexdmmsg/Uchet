@@ -140,6 +140,31 @@ details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:
 .mt th,.mt td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .mt th:first-child,.mt td:first-child{text-align:left;text-transform:capitalize}
 .mt th{font-weight:600;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+
+.views{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px}
+.views button{flex:1;border:0;border-radius:7px;padding:8px 10px;font-weight:600;color:var(--muted);background:none}
+.views button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.view{display:flex;flex-direction:column;gap:20px}
+.sal-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.sal-form .wide{grid-column:1/-1}
+.hint{font-size:.78rem;color:var(--muted)}
+.sal-hero{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.sal-hero>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sal-hero .big{font-size:1.6rem;color:var(--inc)}
+.sal-hero .num{overflow-wrap:anywhere}
+.sal-hero .split{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:.9rem}
+@media (max-width:520px){.sal-hero{grid-template-columns:1fr 1fr}.sal-hero>div:first-child{grid-column:1/-1}}
+.rate{display:inline-block;font-size:.72rem;padding:1px 6px;border-radius:4px;background:var(--line);color:var(--muted);font-family:var(--f-num)}
+.rate.up{background:var(--exp-soft);color:var(--exp)}
+.sal-table{overflow-x:auto}
+.sal-table table{border-collapse:collapse;width:100%;font-size:.85rem}
+.sal-table th,.sal-table td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.sal-table th:first-child,.sal-table td:first-child{text-align:left;text-transform:capitalize}
+.sal-table th{font-weight:600;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.03em}
+.sal-table td:first-child{max-width:6.5em;overflow:hidden;text-overflow:ellipsis}
+.sal-table tr.cur td{font-weight:600;background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.sal-table tfoot td{font-weight:600;border-bottom:0}
+.note{font-size:.8rem;color:var(--muted);line-height:1.5;margin:0}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:.88rem;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -162,6 +187,13 @@ details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:
       <button class="icon" id="next" aria-label="Следующий месяц">›</button>
     </div>
   </header>
+
+  <nav class="views" aria-label="Разделы">
+    <button type="button" id="vbLedger" aria-pressed="true">Учёт</button>
+    <button type="button" id="vbSalary" aria-pressed="false">Зарплата</button>
+  </nav>
+
+  <div class="view" id="vLedger">
 
   <section class="strip" aria-label="Итоги месяца">
     <div><span class="label">Остаток за месяц</span><span class="num" id="sBal">0 ₽</span></div>
@@ -215,6 +247,29 @@ details.mt summary:focus-visible{outline:2px solid var(--accent);outline-offset:
     <div class="sec-head"><h2>Операции</h2><span class="muted" id="count"></span></div>
     <div id="journal"></div>
   </section>
+  </div>
+
+  <div class="view" id="vSalary" hidden>
+    <section class="sal-form" aria-label="Данные о зарплате">
+      <div class="seg wide" role="group" aria-label="Что известно">
+        <button type="button" class="i" id="smGross" aria-pressed="true">Знаю оклад</button>
+        <button type="button" class="i" id="smNet" aria-pressed="false">Знаю «на руки»</button>
+      </div>
+      <label class="field wide"><span class="label" id="salAmtLabel">Оклад до вычета НДФЛ, ₽ в месяц</span><input id="salAmt" inputmode="decimal" placeholder="Например, 100 000"></label>
+      <label class="field"><span class="label">Надбавки, %</span><input id="salBonus" inputmode="decimal" placeholder="0"><span class="hint">Районный коэффициент, северные, постоянная премия</span></label>
+      <label class="field"><span class="label">Детей</span><select id="salKids"><option value="0">Нет</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select><span class="hint">Стандартный вычет на детей</span></label>
+      <label class="field"><span class="label">Аванс, %</span><select id="salAdv"><option value="40">40%</option><option value="50">50%</option><option value="0">Без аванса</option></select></label>
+      <label class="field"><span class="label">Год</span><select id="salYear"></select></label>
+    </section>
+
+    <section class="sal-hero" aria-label="Итог" id="salHero"></section>
+
+    <section aria-label="По месяцам" style="display:flex;flex-direction:column;gap:10px">
+      <div class="sec-head"><h2>Помесячно за год, ₽</h2><span class="muted" id="salYearNote"></span></div>
+      <div class="sal-table" id="salTable"></div>
+      <p class="note">НДФЛ считается нарастающим итогом с начала года по прогрессивной шкале: 13% с дохода до 2,4 млн ₽ за год, 15% — с части от 2,4 до 5 млн, 18% — от 5 до 20 млн, 20% — от 20 до 50 млн, 22% — свыше 50 млн. Вычет на детей: 1 400 ₽ на первого, 2 800 ₽ на второго, 6 000 ₽ на третьего и каждого следующего, пока доход с начала года не превысит 450 000 ₽. Расчёт для обычного трудового договора, без больничных, отпускных и разовых премий. Точная сумма — в расчётном листке.</p>
+    </section>
+  </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -540,6 +595,74 @@ $("r6").onclick=()=>{range=6;try{localStorage.setItem("kopilka-range","6")}catch
 $("r12").onclick=()=>{range=12;try{localStorage.setItem("kopilka-range","12")}catch(e){}renderChart()};
 document.addEventListener("pointerdown",e=>{if(!e.target.closest("#chart"))$("tip").hidden=true});
 try{new ResizeObserver(()=>renderChart()).observe($("chart"))}catch(e){addEventListener("resize",renderChart)}
+
+/* ---------- salary ---------- */
+const BRACKETS=[[2.4e6,.13],[5e6,.15],[2e7,.18],[5e7,.20],[Infinity,.22]];
+function ndfl(base){let tax=0,prev=0;for(const[lim,r]of BRACKETS){if(base<=prev)break;tax+=(Math.min(base,lim)-prev)*r;prev=lim}return tax}
+function rateAt(base){let prev=0;for(const[lim,r]of BRACKETS){if(base<=lim)return r;prev=lim}return .22}
+function kidsDed(n){let d=0;for(let i=1;i<=n;i++)d+=i===1?1400:i===2?2800:6000;return d}
+function salaryYear(gross,kids){
+  const ded=kidsDed(kids);let cumIncome=0,cumDed=0,cumTax=0;const rows=[];
+  for(let m=0;m<12;m++){
+    cumIncome+=gross; if(ded&&cumIncome<=450000)cumDed+=ded;
+    const base=Math.max(0,cumIncome-cumDed),t=Math.round(ndfl(base)),tax=t-cumTax;cumTax=t;
+    rows.push({m,gross,tax,net:gross-tax,rate:rateAt(base)});
+  }
+  return rows;
+}
+function grossFromNet(net,kids){ // по январю: ставка 13%, вычет действует
+  const ded=kidsDed(kids);let g=(net-.13*ded)/.87;
+  for(let i=0;i<30;i++){const r=salaryYear(g,kids)[0];g+=net-r.net}
+  return Math.max(0,Math.round(g*100)/100);
+}
+let sal={mode:"gross",amt:"",bonus:"",kids:"0",adv:"40",year:String(new Date().getFullYear()),view:"ledger"};
+try{Object.assign(sal,JSON.parse(localStorage.getItem("kopilka-salary")||"{}"))}catch(e){}
+const saveSal=()=>{try{localStorage.setItem("kopilka-salary",JSON.stringify(sal))}catch(e){}};
+(function initSalary(){
+  const y=new Date().getFullYear();$("salYear").innerHTML=[y-1,y,y+1].map(v=>`<option>${v}</option>`).join("");
+  $("salAmt").value=sal.amt;$("salBonus").value=sal.bonus;$("salKids").value=sal.kids;$("salAdv").value=sal.adv;$("salYear").value=sal.year;
+  for(const id of["salAmt","salBonus","salKids","salAdv","salYear"])$(id).addEventListener("input",()=>{sal.amt=$("salAmt").value;sal.bonus=$("salBonus").value;sal.kids=$("salKids").value;sal.adv=$("salAdv").value;sal.year=$("salYear").value;saveSal();renderSalary()});
+  $("smGross").onclick=()=>{sal.mode="gross";saveSal();renderSalary()};
+  $("smNet").onclick=()=>{sal.mode="net";saveSal();renderSalary()};
+  $("vbLedger").onclick=()=>setView("ledger");$("vbSalary").onclick=()=>setView("salary");
+  setView(sal.view);
+})();
+function setView(v){
+  sal.view=v;saveSal();
+  $("vbLedger").setAttribute("aria-pressed",v==="ledger");$("vbSalary").setAttribute("aria-pressed",v==="salary");
+  $("vLedger").hidden=v!=="ledger";$("vSalary").hidden=v!=="salary";
+  document.querySelector(".month").hidden=v!=="ledger";
+  if(v==="salary")renderSalary();else renderChart();
+}
+function nf(n){return new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0}).format(n)}
+function renderSalary(){
+  $("smGross").setAttribute("aria-pressed",sal.mode==="gross");$("smNet").setAttribute("aria-pressed",sal.mode==="net");
+  $("salAmtLabel").textContent=sal.mode==="gross"?"Оклад до вычета НДФЛ, ₽ в месяц":"Хочу получать на руки, ₽ в месяц";
+  const amt=parseFloat(String(sal.amt).replace(/[\s ]/g,"").replace(",","."))||0;
+  const bonus=Math.max(0,parseFloat(String(sal.bonus).replace(",","."))||0);
+  const kids=+sal.kids||0,adv=+sal.adv||0,year=+sal.year;
+  const now=new Date(),curM=year===now.getFullYear()?now.getMonth():year<now.getFullYear()?11:0;
+  if(!amt){
+    $("salHero").innerHTML=`<div style="grid-column:1/-1"><b>Введите ${sal.mode==="gross"?"оклад":"желаемую сумму на руки"}</b><span class="muted">Посчитаю, сколько придёт на карту в каждом месяце, сколько уйдёт в НДФЛ, и как разделятся аванс и вторая часть.</span></div>`;
+    $("salTable").innerHTML="";$("salYearNote").textContent="";return;
+  }
+  let gross;
+  if(sal.mode==="gross")gross=amt*(1+bonus/100);
+  else gross=grossFromNet(amt,kids);
+  const rows=salaryYear(gross,kids),cur=rows[curM];
+  const tot=rows.reduce((a,r)=>({g:a.g+r.gross,t:a.t+r.tax,n:a.n+r.net}),{g:0,t:0,n:0});
+  const mName=m=>new Date(year,m,1).toLocaleDateString("ru-RU",{month:"long"});
+  const advSum=Math.round(gross*adv/100),rest=cur.net-advSum;
+  const baseOklad=sal.mode==="net"?gross/(1+bonus/100):amt;
+  $("salHero").innerHTML=`<div><span class="label">На руки · ${mName(curM)}</span><span class="num big">${fmt(cur.net)}</span></div>
+    <div><span class="label">${sal.mode==="net"?"Нужен оклад":"Начислено"}</span><span class="num">${fmt(sal.mode==="net"?Math.ceil(baseOklad):gross)}</span>${sal.mode==="net"&&bonus?`<span class="hint">С надбавками: ${fmt(Math.round(gross))}</span>`:""}</div>
+    <div><span class="label">НДФЛ</span><span class="num">${fmt(cur.tax)}</span><span class="hint">ставка ${Math.round(cur.rate*100)}%</span></div>
+    <div class="split">${adv?`<span>Аванс ≈ <b class="num">${fmt(advSum)}</b></span><span>Вторая часть ≈ <b class="num">${fmt(rest)}</b></span>`:`<span>Выплата раз в месяц: <b class="num">${fmt(cur.net)}</b></span>`}<span class="muted">За год на руки: <b class="num">${fmt(tot.n)}</b></span></div>`;
+  const first=rows.findIndex(r=>r.rate>.13);
+  $("salYearNote").textContent=first>=0?`с ${new Date(year,first,1).toLocaleDateString("ru-RU",{day:"numeric",month:"long"}).replace(/^\d+\s*/,"")} ставка выше 13%`:"весь год по 13%";
+  $("salTable").innerHTML=`<table><thead><tr><th>Месяц</th><th>Начислено</th><th>НДФЛ</th><th>На руки</th><th>%</th></tr></thead><tbody>${rows.map(r=>`<tr class="${r.m===curM?"cur":""}"><td>${mName(r.m)}</td><td class="num">${nf(r.gross)}</td><td class="num">${nf(r.tax)}</td><td class="num">${nf(r.net)}</td><td><span class="rate${r.rate>.13?" up":""}">${Math.round(r.rate*100)}</span></td></tr>`).join("")}</tbody>
+    <tfoot><tr><td style="text-transform:none">За год</td><td class="num">${nf(tot.g)}</td><td class="num">${nf(tot.t)}</td><td class="num">${nf(tot.n)}</td><td></td></tr></tfoot></table>`;
+}
 
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function plural(n,f){const a=n%10,b=n%100;return f[a===1&&b!==11?0:a>=2&&a<=4&&(b<10||b>=20)?1:2]}

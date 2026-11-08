@@ -1,5 +1,5 @@
 // Где деньги?: офлайн-кэш. При изменении файлов увеличьте номер версии.
-const CACHE = "kopilka-v4";
+const CACHE = "kopilka-v5";
 const CORE = ["./", "index.html", "manifest.webmanifest", "xlsx.full.min.js",
   "icon-192.png", "icon-512.png", "apple-touch-icon.png", "cat.jpg"];
 
